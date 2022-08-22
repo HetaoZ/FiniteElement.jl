@@ -1,0 +1,13 @@
+name = "FiniteElement"
+uuid = "c0f972d0-7f3b-405a-865f-ed8d7be92c18"
+authors = ["HetaoZ <iamzhtr@hotmail.com> and contributors"]
+version = "0.1.0"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
