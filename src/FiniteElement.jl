@@ -1,54 +1,61 @@
 module FiniteElement
-using Reexport, Printf
+using Reexport
 
-# 调用者一定也会用到这些包
-include("Ferrite/src/Ferrite.jl")
-@reexport using .Ferrite
-using Tensors
-@reexport using WriteVTK
+@reexport using Tensors
+using WriteVTK
 
-getdim = Ferrite.getdim
-curl = Ferrite.curl # deal with its warning
-
-# 调用者不一定会用到这些包
 using LinearAlgebra
 using SparseArrays
+using ReadGmsh
 
-import PointInPoly: pinpoly
-
-export  
+export
+    RectangularGrid,
+    Quadrilateral,
+    LinearElasticity,
     J2Plasticity,
-    vonMises,
-    PlasticStructure,
-    Surface,
     NewtonRaphsonSolver,
     NewmarkSolver,
-    ExplicitSolver
-    
+    ExplicitSolver,
+    Structure,
+    Node
+
 export
-    generate_grid,
-    add_bc!,
-    advance!,
-    fetch_surface,
-    fetch_data,
-    save_to_vtk,
-    time_step!
+    find_nodes,
+    add_dirichlet!,
+    add_node_force!,
+    save_vtk
     
 
-# 不知道有什么用
-# using Base: @propagate_inbounds
+#     J2Plasticity,
+#     vonMises,
+#     PlasticStructure,
+#     Surface,
+#     NewtonRaphsonSolver,
+#     NewmarkSolver,
+#     ExplicitSolver
+    
+# export
+#     generate_grid,
+#     add_bc!,
+#     advance!,
+#     fetch_surface,
+#     fetch_data,
+#     save_to_vtk,
+#     time_step!
 
-# basic types
-include("base.jl")
 
-# helper functions
-include("geometry.jl")
-include("assembler_static.jl")
-include("assembler_dynamic.jl")
-include("creater.jl")
-include("solver.jl")
-include("fetchers.jl")
-include("postprocess_vtk.jl")
-include("preprocess.jl")
+# main files
+include("type.jl")
+include("utils/utils.jl")
+include("material/material.jl")
+include("grid/grid.jl")
+include("solver/solver.jl")
+include("solver/constrain.jl")
+include("structure.jl")
+
+
+# pre/post-process
+include("utils/preprocess.jl")
+include("utils/postprocess.jl")
 
 end

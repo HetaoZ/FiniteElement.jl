@@ -1,1 +1,0 @@
-generate_grid(c, nel::NTuple, left::NTuple, right::NTuple) = Ferrite.generate_grid(c, nel, Vec(left), Vec(right))
