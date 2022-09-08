@@ -10,8 +10,6 @@ function assemble_solution!(solution::TotalLagragianSolution, grid::Grid{dim}, m
     clear_solution!(solution, solver)
 
     for (elem, elem_states) in zip(grid.elements, states)
-        fill!(Ke, 0.)
-        fill!(Qe, 0.)
         de = solution.d[getdofs(elem)]
         assemble_element!(elem, grid.nodes, material, de, elem_states, Ke, Qe)
         # assemble_global!(solution, Ke, Qe)
@@ -29,6 +27,9 @@ load 应该在组装完总体 Q 之后添加到 Q 上，而不是逐个单元加
 输入参数 Ke, Qe 是为了避免重复分配内存。
 """
 function assemble_element!(elem::Quadrilateral, nodes::Vector{Node{dim}}, material::AbstractMaterial, de::Vector{Float64}, states::Vector{AbstractMaterialState}, Ke::Matrix{Float64}, Qe::Vector{Float64}) where dim
+
+    fill!(Ke, 0.)
+    fill!(Qe, 0.)
     
     x = collect(elem_x(elem, nodes)')
     reinit!(elem.cv, elem.qr, x) # 更新当前的detJ和dNdx

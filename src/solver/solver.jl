@@ -38,8 +38,8 @@ function newton_raphson_solver!(s::Structure, nrsolver::StaticSolver)
             break
         end
 
-        s.solution.Δd = -Symmetric(s.solution.K) \ s.solution.Q
-        s.solution.d += s.solution.Δd
+        s.solution.Δd = - Symmetric(s.solution.K) \ s.solution.Q  # 需要检验是否符号正确
+        s.solution.d += s.solution.Δd 
     end
 
     for i in eachindex(s.states)

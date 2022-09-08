@@ -105,3 +105,5 @@ end
 @propagate_inbounds shape_gradient(cv::CellValues, q_point::Int) = cv.dNdx[:,:, q_point]
 
 @propagate_inbounds getdetJdV(cv::CellValues, q_point::Int) = cv.detJdV[q_point]
+
+@propagate_inbounds shape_value(cv::CellValues, i::Int, q_point::Int) = cv.N[i, q_point]
