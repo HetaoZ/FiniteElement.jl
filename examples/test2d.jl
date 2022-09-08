@@ -22,11 +22,11 @@ function bc!(node::Node)
     node.d = Vec(0,0)
 end
 
-add_dirichlet!(s, node_ids, bc!)
+# add_dirichlet!(s, node_ids, bc!)
 
 # 施加载荷
-node_ids = find_nodes(s, (2-0.1,0.1), (2+0.1,1e2))
-add_node_force!(s, node_ids, t->Vec(0,-1e3))
+# node_ids = find_nodes(s, (2-0.1,0.1), (2+0.1,1e2))
+# add_node_force!(s, node_ids, t->Vec(0,-1e3))
 
 # 导出
 # dump(s)
@@ -35,3 +35,4 @@ save_vtk(s, ("x0","x","d","u","a"), (:x0,:x,:d,:u,:a), "../../out/test2d/structu
 
 
 # 求解
+advance!(s)

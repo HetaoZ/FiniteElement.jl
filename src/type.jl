@@ -49,42 +49,6 @@ end
 # ----------------------------------------------------------
 # 网格
 # ----------------------------------------------------------
-
-mutable struct Node{dim}
-    id::Int
-    x0::Vec{dim,Float64}
-    x::Vec{dim,Float64}
-    d::Vec{dim,Float64}
-    u::Vec{dim,Float64}
-    a::Vec{dim,Float64}
-    f::Vec{dim,Float64}
-end
-
-abstract type AbstractElementType{dim,N,M,L} end
-
-"""
-Node数据集中存储在Grid里，而单元只存储拓扑信息。
-
-dim: dimension
-
-N: number of element nodes
-
-M: number of element faces
-
-L: number of nodes in each face
-"""
-struct Element{dim,N,M,L} <: AbstractElementType{dim,N,M,L}
-    connection::NTuple{N,Int}
-    faces::NTuple{M,NTuple{L,Int}}
-end
-
-# 细分的单元类型
-const Line = Element{1,2,2,1}
-const Triangle = Element{2,3,3,2}
-const Quadrilateral = Element{2,4,4,2}
-const Tetrahedron = Element{3,4,4,3}
-const Hexahedron = Element{3,8,6,4}
-
 """
 Represents a reference shape which quadrature rules and interpolations are defined on.
 Currently, the only concrete types that subtype this type are `RefCube` in 1, 2 and 3 dimensions,
@@ -141,21 +105,52 @@ Abstract type which has `CellValues` and `FaceValues` as subtypes
 """
 abstract type Values{dim,T,refshape} end
 abstract type CellValues{dim,T,refshape} <: Values{dim,T,refshape} end
-abstract type FaceValues{dim,T,refshape} <: Values{dim,T,refshape} end
 
 struct CellScalarValues{dim,T<:Real,refshape<:AbstractRefShape} <: CellValues{dim,T,refshape}
     N::Matrix{T}
-    dNdx::Matrix{Vec{dim,T}}
-    dNdξ::Matrix{Vec{dim,T}}
+    dNdx::Array{T,3}
+    dNdξ::Array{T,3}
     detJdV::Vector{T}
-    M::Matrix{T}
-    dMdξ::Matrix{Vec{dim,T}}
-    qr::QuadratureRule{dim,refshape,T}
-    # The following fields are deliberately abstract -- they are never used in
-    # performance critical code, just stored here for convenience.
-    func_interp::Interpolation{dim,refshape}
-    geo_interp::Interpolation{dim,refshape}
 end
+
+mutable struct Node{dim}
+    id::Int
+    x0::Vec{dim,Float64}
+    x::Vec{dim,Float64}
+    d::Vec{dim,Float64}
+    u::Vec{dim,Float64}
+    a::Vec{dim,Float64}
+    f::Vec{dim,Float64}
+end
+
+abstract type AbstractElementType{dim,N,M,L} end
+
+"""
+Node数据集中存储在Grid里，而单元只存储拓扑信息。
+
+dim: dimension
+
+N: number of element nodes
+
+M: number of element faces
+
+L: number of nodes in each face
+"""
+struct Element{dim,N,M,L} <: AbstractElementType{dim,N,M,L}
+    connection::NTuple{N,Int}
+    faces::NTuple{M,NTuple{L,Int}}
+    cv::CellScalarValues
+    qr::QuadratureRule
+    ip::Interpolation
+end
+
+# 细分的单元类型
+const Line = Element{1,2,2,1}
+const Triangle = Element{2,3,3,2}
+const Quadrilateral = Element{2,4,4,2}
+const Tetrahedron = Element{3,4,4,3}
+const Hexahedron = Element{3,8,6,4}
+
 
 
 
@@ -267,6 +262,7 @@ mutable struct Structure{dim}
     material::AbstractMaterial
     grid::AbstractGrid
     solver::AbstractSolver
+    states::Vector{AbstractMaterialState}
     solution::AbstractSolution
     constrains::Vector{AbstractConstrain}
     parameters::Dict

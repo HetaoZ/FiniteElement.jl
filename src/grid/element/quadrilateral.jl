@@ -1,4 +1,9 @@
 
+function Element(::Type{Quadrilateral}, connection, faces)
+    qr, ip = QuadratureRule{2,RefCube}(2), Lagrange{2,RefCube,1}()
+    cv = CellScalarValues(qr, ip)
+    return Quadrilateral(connection, faces, cv, qr, ip)
+end
 
 function init_volume(elem::Quadrilateral, nodes)
     x = elem_x0(elem, nodes)

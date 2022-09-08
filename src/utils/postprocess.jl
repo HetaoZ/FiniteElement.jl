@@ -39,3 +39,15 @@ function pts_cells(grid::Grid{dim,T}) where {dim,T}
     end
     return pts, cells
 end
+
+"""
+Fetch data from elements. This differs from assemble_elem_field.
+"""
+function fetch_data(s::Structure{dim}, field) where dim
+    f = getfield(s.grid.nodes[1], field)
+    d = Array{eltype(f)}(undef, dim, getnnodes(s.grid))
+    for node in s.grid.nodes 
+        d[:,node.id] = getfield(node, field)
+    end
+    return d    
+end

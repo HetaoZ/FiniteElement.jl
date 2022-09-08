@@ -7,6 +7,8 @@ using WriteVTK
 using LinearAlgebra
 using SparseArrays
 using ReadGmsh
+using Base: @propagate_inbounds
+using Printf
 
 export
     RectangularGrid,
@@ -20,6 +22,7 @@ export
     Node
 
 export
+    advance!,
     find_nodes,
     add_dirichlet!,
     add_node_force!,
@@ -37,7 +40,7 @@ export
 # export
 #     generate_grid,
 #     add_bc!,
-#     advance!,
+#     
 #     fetch_surface,
 #     fetch_data,
 #     save_to_vtk,
@@ -50,9 +53,6 @@ include("utils/utils.jl")
 include("material/material.jl")
 include("grid/grid.jl")
 include("solver/solver.jl")
-include("solver/constrain.jl")
-include("structure.jl")
-
 
 # pre/post-process
 include("utils/preprocess.jl")

@@ -22,7 +22,7 @@ function generate(g::RectangularGrid{2,Quadrilateral})
         node4 = nodes[c[1], c[2]+1].id
         connection = (node1, node2, node3, node4)
         faces = ((node1,node2), (node2,node3), (node3,node4), (node4,node1))
-        elements[c] = Quadrilateral(connection, faces)
+        elements[c] = Element(Quadrilateral, connection, faces)
     end
 
     nodes = reshape(nodes, (length(nodes),))
@@ -41,3 +41,21 @@ end
 function cartesian_to_node_id(c::CartesianIndex{1}, nnode)
     return c[1]
 end
+
+
+
+function Structure(material::AbstractMaterial, grid::Grid{dim,T}, solver::AbstractSolver) where {dim,T}
+    return Structure{dim}(material, grid, solver, new_states(material, getnelems(grid)), new_solution(solver, getndofs(grid)), 
+     AbstractConstrain[], Dict(), true)
+end
+
+"根据prototype自动生成网格"
+function Structure(material::AbstractMaterial, grid_prototype::AbstractGridPrototype, solver::AbstractSolver)
+    return Structure(material, generate(grid_prototype), solver)
+end
+
+"获取指定空间范围内包含的结点编号向量"
+function find_nodes(s::Structure, start, stop)
+    return find_nodes(s.grid, start, stop)
+end
+
