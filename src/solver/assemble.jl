@@ -2,10 +2,11 @@ function doassemble!(s::Structure)
     assemble_solution!(s.solution, s.grid, s.material, s.states, s.solver)
 end
 
-function assemble_solution!(solution::TotalLagragianSolution, grid::Grid, material::AbstractMaterial, states::Vector{AbstractMaterialState}, solver::StaticSolver)
+function assemble_solution!(solution::TotalLagragianSolution, grid::Grid{dim}, material::AbstractMaterial, states::Vector{AbstractMaterialState}, solver::StaticSolver) where dim
     n_basefuncs = getnbasefunctions(grid.elements[1].ip)
-    Ke = zeros(Float64, n_basefuncs, n_basefuncs)
-    Qe = zeros(Float64, n_basefuncs)
+    ndofs = n_basefuncs * dim
+    Ke = zeros(Float64, ndofs, ndofs)
+    Qe = zeros(Float64, ndofs)
     clear_solution!(solution, solver)
 
     for (elem, state) in zip(grid.elements, states)
@@ -64,7 +65,13 @@ function assemble_element!(elem::Quadrilateral, nodes::Vector{Node{dim}}, materi
         ∇N = shape_gradient(elem.cv, i_qpoint) # size(∇N) = (dim,n)
         B = cat(ntuple(k -> node_strain_matrix(∇N[:,k]), n)..., dims = (3,))
         # size(B) = (dim, dim, dim*n)
-        Ke +=  transpose(B) ⊡ D ⊡ B * detJdV
+        for i = 1:dim*n
+            Bᵀ_i = Tensor{2,dim}(B[:,:,i]) # 由于B_i对称所以略去转置
+            for j = 1:dim*n
+                B_j = Tensor{2,dim}(B[:,:,j])
+                Ke[i,j] += Bᵀ_i  ⊡ D ⊡ B_j * detJdV
+            end
+        end
     end
 
     # Qe 表示体积力和面力对结点载荷的贡献，此处记为 0， 不做计算，在最终的 Q 上一次性添加外载荷 load
@@ -72,11 +79,11 @@ function assemble_element!(elem::Quadrilateral, nodes::Vector{Node{dim}}, materi
     return Ke, Qe
 end
 
-import LinearAlgebra.transpose
-function transpose(a::Array{Float64})
-    n = length(size(a))
-    return permutedims(a, [i for i in n:-1:1])
-end
+# import LinearAlgebra.transpose
+# function transpose(a::Array{Float64})
+#     n = length(size(a))
+#     return permutedims(a, [i for i in n:-1:1])
+# end
 
 function multiply(a::Array{Float64}, b::Array{Float64})
     sa_left, sa_right = size(a)[1:end-1], size(a)[end]

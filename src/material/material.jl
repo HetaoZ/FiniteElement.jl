@@ -90,7 +90,7 @@ end
 function compute_stress_tangent(ϵ::SymmetricTensor, material::LinearElasticity, state::LinearElasticState)
     # elastic loading
     state.temp_σ = material.Dᵉ ⊡ ϵ
-    return state.temp_σ, collect(material.Dᵉ)
+    return state.temp_σ, material.Dᵉ
 end
 
 function compute_stress_tangent(ϵ::SymmetricTensor, material::J2Plasticity, state::PlasticState)
@@ -136,7 +136,7 @@ function compute_stress_tangent(ϵ::SymmetricTensor, material::J2Plasticity, sta
         state.temp_ϵᵖ = state.ϵᵖ + Δϵᵖ  # plastic strain
         state.temp_k = state.k + μ     # hardening variable
         state.temp_σ = σ               # updated stress
-        return state.temp_σ, collect(D)
+        return state.temp_σ, D
     end
 end
 
