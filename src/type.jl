@@ -262,7 +262,7 @@ mutable struct Structure{dim}
     material::AbstractMaterial
     grid::AbstractGrid
     solver::AbstractSolver
-    states::Vector{AbstractMaterialState}
+    states::Vector{Vector{AbstractMaterialState}}
     solution::AbstractSolution
     constrains::Vector{AbstractConstrain}
     parameters::Dict

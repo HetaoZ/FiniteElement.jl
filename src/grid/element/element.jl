@@ -74,7 +74,7 @@ The derivatives of the shape functions, and the new integration weights are comp
 
 [@ref] 王勖成《有限单元法》P133
 """
-function reinit!(cv::CellValues{dim}, ip::Interpolation, qr::QuadratureRule, x::Matrix{Float64}) where {dim}
+function reinit!(cv::CellValues{dim}, qr::QuadratureRule, x::Matrix{Float64}) where {dim}
 
     nq = length(qr.weights) # 积分点数
 

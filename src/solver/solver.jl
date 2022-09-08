@@ -1,7 +1,8 @@
 
 # 完全拉格朗日格式
 include("total_lagrangian.jl")
-include("assemble.jl")
+include("assemble_static.jl")
+include("assemble_dynamic.jl")
 
 # 更新拉格朗日格式（待补充）
 
@@ -18,7 +19,6 @@ end
 
 function newton_raphson_solver!(s::Structure, nrsolver::StaticSolver) 
     
-
     newton_itr = -1
     while true; newton_itr += 1
 
@@ -42,7 +42,9 @@ function newton_raphson_solver!(s::Structure, nrsolver::StaticSolver)
         s.solution.d += s.solution.Δd
     end
 
-    for cell_state in s.states
-        update_state!(cell_state)
+    for i in eachindex(s.states)
+        for j in eachindex(s.states[i])
+            update_state!(s.states[i][j])
+        end
     end
 end

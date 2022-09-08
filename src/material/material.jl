@@ -79,12 +79,16 @@ function update_state!(state::PlasticState)
     state.k = state.temp_k
 end
 
-function new_states(::LinearElasticity{dim,T,S}, n::Int) where {dim,T,S}
-    return fill(LinearElasticState(dim), n)
+"""
+n = number of elements
+nq = number of quadrature points per element
+"""
+function new_states(::LinearElasticity{dim,T,S}, n::Int, nq::Int) where {dim,T,S}
+    return fill(fill(LinearElasticState(dim), nq), n)
 end
 
-function new_states(::J2Plasticity{dim,T,S}, n::Int) where {dim,T,S}
-    return fill(PlasticState(dim), n)
+function new_states(::J2Plasticity{dim,T,S}, n::Int, nq::Int) where {dim,T,S}
+    return fill(fill(PlasticState(dim), nq), n)
 end
 
 function compute_stress_tangent(ϵ::SymmetricTensor, material::LinearElasticity, state::LinearElasticState)
