@@ -1,7 +1,6 @@
 # 预处理只需要创建网格
-
-function generate(g::RectangularGrid{2,Quadrilateral})
-    dim = 2
+" 1/2/3维  Line2/Quad4/Hex8 单元网格"
+function generate(g::RectangularGrid{dim,T}) where dim where T <: CubeElement
     nnode = g.nel .+ 1
     d = (g.stop .- g.start) ./ g.nel 
     coords = ntuple(axis -> [g.start[axis] + d[axis] * (i-1) for i = 1:nnode[axis]], dim)
@@ -14,20 +13,45 @@ function generate(g::RectangularGrid{2,Quadrilateral})
         nodes[c] = Node{dim}(node_id, x0, x, tensorzeros(dim),tensorzeros(dim),tensorzeros(dim),tensorzeros(dim))
     end
 
-    elements = Array{Quadrilateral}(undef,g.nel)
+    elements = Array{T}(undef,g.nel)
     for c in CartesianIndices(elements)
-        node1 = nodes[c].id
-        node2 = nodes[c[1]+1, c[2]].id
-        node3 = nodes[c[1]+1, c[2]+1].id
-        node4 = nodes[c[1], c[2]+1].id
-        connection = (node1, node2, node3, node4)
-        faces = ((node1,node2), (node2,node3), (node3,node4), (node4,node1))
-        elements[c] = Element(Quadrilateral, connection, faces)
+        if T == Line
+            node1 = nodes[c].id
+            node2 = nodes[c[1]+1].id
+            connection = (node1, node2)
+            faces = ((node1,), (node2,))
+        elseif T == Quadrilateral
+            node1 = nodes[c].id
+            node2 = nodes[c[1]+1, c[2]].id
+            node3 = nodes[c[1]+1, c[2]+1].id
+            node4 = nodes[c[1], c[2]+1].id
+            connection = (node1, node2, node3, node4)
+            faces = ((node1,node2), (node2,node3), (node3,node4), (node4,node1))
+        elseif T == Hexahedron
+            P1 = nodes[c].id
+            P2 = nodes[c[1]+1, c[2], c[3]].id
+            P3 = nodes[c[1], c[2]+1, c[3]].id
+            P4 = nodes[c[1]+1, c[2]+1, c[3]].id
+
+            P5 = nodes[c[1], c[2], c[3]+1].id
+            P6 = nodes[c[1]+1, c[2], c[3]+1].id
+            P7 = nodes[c[1], c[2]+1, c[3]+1].id
+            P8 = nodes[c[1]+1, c[2]+1, c[3]+1].id    
+            
+            connection = (P1,P2,P3,P4,P5,P6,P7,P8)
+            faces = ((P1,P5,P7,P3), (P2,P6,P5,P1), (P4,P8,P6,P2), (P3,P7,P8,P4), (P1,P3,P4,P2), (P5,P6,P8,P7))
+        else
+            error("undefined element type")
+        end
+        
+
+        elements[c] = Element(T, connection, faces)
     end
 
     nodes = reshape(nodes, (length(nodes),))
     elements = reshape(elements, (length(elements),))
-    return Grid{2,Quadrilateral}(nodes, elements)
+
+    return Grid{dim,T}(nodes, elements)
 end
 
 function cartesian_to_node_id(c::CartesianIndex{3}, nnode)

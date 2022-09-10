@@ -57,7 +57,7 @@ function hexahedron_volume(P1, P2, P3, P4, P5, P6, P7, P8)
     V3 = four_facets_volume(P1, P2, P6, P5)
     V4 = four_facets_volume(P4, P3, P7, P8)
 
-    V5 = four_facets_volume(P1, P2, P4, P3)
+    V5 = four_facets_volume(P1, P3, P4, P2)
     V6 = four_facets_volume(P5, P6, P8, P7)
 
     V = abs(V1+V2+V3+V4+V5+V6)

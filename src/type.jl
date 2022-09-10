@@ -155,6 +155,9 @@ const Quadrilateral = Element{2,4,4,2}
 const Tetrahedron = Element{3,4,4,3}
 const Hexahedron = Element{3,8,6,4}
 
+const CubeElement = Union{Line, Quadrilateral, Hexahedron}
+const SimplicityElement = Union{Triangle, Tetrahedron}
+
 abstract type AbstractGrid{dim} end
 
 mutable struct Grid{dim, T<:AbstractElementType} <: AbstractGrid{dim}
