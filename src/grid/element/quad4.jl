@@ -14,3 +14,7 @@ function volume(elem::Quadrilateral, nodes::Vector{Node})
     x = elem_x(elem, nodes)
     return polygon_area(x[1,:], x[2,:])
 end
+
+function get_min_length(elem::Quadrilateral, nodes)
+    return sqrt(volume(elem, nodes))
+end

@@ -14,3 +14,7 @@ function volume(elem::Line, nodes::Vector{Node})
     x = elem_x(elem, nodes)
     return abs(x[1]-x[2])
 end
+
+function get_min_length(elem::Line, nodes)
+    return volume(elem, nodes)
+end

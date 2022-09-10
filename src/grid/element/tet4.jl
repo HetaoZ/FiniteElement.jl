@@ -16,10 +16,9 @@ function volume(elem::Tetrahedron, nodes::Vector{Node})
 end
 
 function get_min_length(elem::Tetrahedron, nodes)
-    x = elem_x(elem, nodes)
-    return tet_minL(x[:,1], x[:,2], x[:,3], x[:,4])
+    return cbrt(volume(elem, nodes) * 6)
 end
 
-function tet_minL(P1,P2,P3,P4)
-    min(norm.([P1-P2,P2-P3,P3-P1,P1-P4,P2-P4,P3-P4]))
-end
+# function tet_minL(P1,P2,P3,P4)
+#     min(norm.([P1-P2,P2-P3,P3-P1,P1-P4,P2-P4,P3-P4]))
+# end

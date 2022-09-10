@@ -14,3 +14,7 @@ function volume(elem::Triangle, nodes::Vector{Node})
     x = elem_x(elem, nodes)
     return polygon_area(x[1,:], x[2,:])
 end
+
+function get_min_length(elem::Triangle, nodes)
+    return sqrt(volume(elem, nodes) * 2)
+end

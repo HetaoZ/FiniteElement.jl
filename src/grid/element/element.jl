@@ -1,5 +1,5 @@
 # 具体定义各类单元的函数
-include("seg2.jl")
+include("line2.jl")
 include("tri3.jl")
 include("quad4.jl")
 include("tet4.jl")
