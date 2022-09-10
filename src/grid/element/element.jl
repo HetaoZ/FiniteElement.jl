@@ -1,5 +1,9 @@
 # 具体定义各类单元的函数
-include("quadrilateral.jl")
+include("seg2.jl")
+include("tri3.jl")
+include("quad4.jl")
+include("tet4.jl")
+include("hex8.jl")
 
 
 # 一般单元类型的函数

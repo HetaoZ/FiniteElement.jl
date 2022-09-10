@@ -42,11 +42,8 @@ function cartesian_to_node_id(c::CartesianIndex{1}, nnode)
     return c[1]
 end
 
-
-
 function Structure(material::AbstractMaterial, grid::Grid{dim,T}, solver::AbstractSolver) where {dim,T}
-    return Structure{dim}(material, grid, solver, new_states(material, getnelems(grid)), new_solution(solver, getndofs(grid)), 
-     AbstractConstrain[], Dict(), true)
+    return Structure{dim}(material, grid, solver, new_states(material, getnelems(grid), getnq(grid)), new_solution(solver, getndofs(grid)), AbstractConstrain[], Dict(), true)
 end
 
 "根据prototype自动生成网格"

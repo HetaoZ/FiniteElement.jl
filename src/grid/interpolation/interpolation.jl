@@ -18,7 +18,3 @@ Return the polynomial order of the `Interpolation`
 # ------------------------------------
 # 拉格朗日多项式插值
 include("lagrange.jl")
-
-# ------------------------------------
-# 实时存储单元插值系数
-# include("cellvalues.jl")

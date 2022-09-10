@@ -14,6 +14,7 @@ getdim(::Grid{dim,T}) where {dim,T} = dim
 getnnodes(g::Grid) = length(g.nodes)
 getnelems(g::Grid) = length(g.elements)
 getndofs(g::Grid{dim,T}) where {dim,T} = dim * length(g.nodes)
+getnq(g::Grid) = length(g.elements[1].qr.weights)
 
 
 "获取指定空间范围内包含的结点编号向量"

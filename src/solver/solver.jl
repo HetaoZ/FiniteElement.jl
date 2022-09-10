@@ -87,14 +87,8 @@ function time_step!(s::Structure, ::DynamicSolver)
     minL = 1.0
     minrho = 1.0
 
-    for e in s.grid.elements
-        ext_connection = push!(e.connection, e.connection[1])
-        
-        for i in eachindex(e.connection)
-            L = norm( s.grid.nodes[ext_connection[i]].x - s.grid.nodes[ext_connection[i+1]].x )
-            minL = min(minL, L)
-        end
-    
+    for e in s.grid.elements        
+        minL = get_min_length(e, s.grid.nodes)
         minrho = min(minrho, elem_density(e, s.grid.nodes, s.material))
     end
 
@@ -103,3 +97,4 @@ function time_step!(s::Structure, ::DynamicSolver)
     
     return dt
 end
+
