@@ -43,6 +43,10 @@ function expansion_coeff(elem::Element, nodes)
     return v/v0
 end
 
+function elem_density(elem::Element, nodes, material::AbstractMaterial)
+    return material.ρ₀ / expansion_coeff(elem, nodes)
+end
+
 # -----------------------------
 # CellValues 
 function CellScalarValues(quad_rule::QuadratureRule{dim,shape}, ip::Interpolation) where {dim,shape<:AbstractRefShape}

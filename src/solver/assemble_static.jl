@@ -12,7 +12,7 @@ function assemble_solution!(solution::TotalLagragianSolution, grid::Grid{dim}, m
     for (elem, elem_states) in zip(grid.elements, states)
         de = solution.d[getdofs(elem)]
         assemble_element!(elem, grid.nodes, material, de, elem_states, Ke, Qe)
-        # assemble_global!(solution, Ke, Qe)
+        assemble_global!(solution, elem, Ke, Qe)
     end
 end
 
@@ -56,6 +56,16 @@ function assemble_element!(elem::Quadrilateral, nodes::Vector{Node{dim}}, materi
     # Qe 表示体积力和面力对结点载荷的贡献，此处记为 0， 不做计算，在最终的 Q 上一次性添加外载荷 load
     
     return Ke, Qe
+end
+
+function assemble_global!(sol::TotalLagragianSolution, elem::Element, Ke, Qe)
+    global_dofs = getdofs(elem)
+    for (i, I) in enumerate(global_dofs)
+        for (j, J) in enumerate(global_dofs)
+            sol.K[I,J] += Ke[i,j]
+        end
+        sol.Q[I] += Qe[i]
+    end
 end
 
 """

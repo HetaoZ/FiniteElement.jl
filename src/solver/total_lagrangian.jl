@@ -4,11 +4,11 @@ function TotalLagragianSolution(ndofs::Int)
     u  = zeros(Float64, ndofs)
     a  = zeros(Float64, ndofs)
 
-    K = spzeros(ndofs, ndofs)
-    M = spzeros(ndofs, ndofs)
+    K = spzeros(Float64, ndofs, ndofs)
+    M = spzeros(Float64, ndofs, ndofs)
     # C = spzeros(ndofs, ndofs)
 
-    Q = zeros(Float64, ndofs)
+    Q = spzeros(Float64, ndofs)
     return TotalLagragianSolution(d,Δd,u,a,K,M,Q)
 end
 

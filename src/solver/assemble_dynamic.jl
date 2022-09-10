@@ -10,7 +10,7 @@ function assemble_solution!(solution::TotalLagragianSolution, grid::Grid{dim}, m
     for (elem, elem_states) in zip(grid.elements, states)
         de = solution.d[getdofs(elem)]
         assemble_element!(elem, grid.nodes, material, de, elem_states, Ke, Qe, Me)
-        # assemble_global!(solution, Ke, Qe, Me)
+        assemble_global!(solution, elem, Ke, Qe, Me)
     end
 end
 
@@ -65,6 +65,13 @@ function assemble_element!(elem::Quadrilateral, nodes::Vector{Node{dim}}, materi
 end
 
 
-function assemble_global!()
-
+function assemble_global!(sol::TotalLagragianSolution, elem::Element, Ke, Qe, Me)
+    global_dofs = getdofs(elem)
+    for (i, I) in enumerate(global_dofs)
+        for (j, J) in enumerate(global_dofs)
+            sol.K[I,J] += Ke[i,j]
+        end
+        sol.Q[I] += Qe[i]
+        sol.M[I,I] += Me[i]
+    end
 end

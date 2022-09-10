@@ -8,7 +8,7 @@ function LinearElasticity(dim, E, ν, ρ₀; planar_strain::Bool = true)
     temp(i,j,k,l) = 2.0G *( 0.5*(δ(i,k)*δ(j,l) + δ(i,l)*δ(j,k)) + ν/(1.0-2.0ν)*δ(i,j)*δ(k,l))
     Dᵉ = SymmetricTensor{4, dim}(temp)
 
-    return LinearElasticity{dim, Float64,  typeof(Dᵉ)}(G, K, Dᵉ, ρ₀)
+    return LinearElasticity{dim, Float64,  typeof(Dᵉ)}(E, ν, G, K, Dᵉ, ρ₀)
 end
 
 # function elast_matrix_pstrain(E, ν)
@@ -44,7 +44,7 @@ function J2Plasticity(dim, E, ν, σ₀, H, ρ₀)
     temp(i,j,k,l) = 2.0G *( 0.5*(δ(i,k)*δ(j,l) + δ(i,l)*δ(j,k)) + ν/(1.0-2.0ν)*δ(i,j)*δ(k,l))
     Dᵉ = SymmetricTensor{4, dim}(temp)
 
-    return J2Plasticity{dim, Float64,  SymmetricTensor{4, dim}}(G, K, σ₀, H, Dᵉ, ρ₀)
+    return J2Plasticity{dim, Float64,  SymmetricTensor{4, dim}}(E, ν, G, K, σ₀, H, Dᵉ, ρ₀)
 end
 
 
