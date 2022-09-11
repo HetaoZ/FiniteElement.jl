@@ -79,7 +79,7 @@ function core_solver!(s::Structure, dt::Real, δ::Float64, α::Float64)
     
     s.solution.a = K_eff \ Q_eff
     s.solution.u = u_bk + ((1-δ)*a_bk + δ * s.solution.a) * dt
-    s.solution.Δd = - (u_bk*dt + ((0.5-α)*a_bk + α * s.solution.a)*dt^2)
+    s.solution.Δd = u_bk*dt + ((0.5-α)*a_bk + α * s.solution.a)*dt^2
     s.solution.d += s.solution.Δd  
 
 end

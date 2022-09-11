@@ -4,7 +4,7 @@ function assemble_solution!(solution::TotalLagragianSolution, grid::Grid{dim}, m
     ndofs = n_basefuncs * dim
     Ke = zeros(Float64, ndofs, ndofs)
     Qe = zeros(Float64, ndofs)
-    Me = zeros(Float64, ndofs)
+    Me = zeros(Float64, ndofs, ndofs)
     clear_solution!(solution, solver)
 
     for (elem, elem_states) in zip(grid.elements, states)
@@ -27,7 +27,7 @@ load 应该在组装完总体 Q 之后添加到 Q 上，而不是逐个单元加
 
 输入参数 Ke, Qe, Me 是为了避免重复分配内存。
 """
-function assemble_element!(elem::Element, nodes::Vector{Node{dim}}, material::AbstractMaterial, de::Vector{Float64}, states::Vector{AbstractMaterialState}, Ke::Matrix{Float64}, Qe::Vector{Float64}, Me::Vector{Float64}) where dim
+function assemble_element!(elem::Element, nodes::Vector{Node{dim}}, material::AbstractMaterial, de::Vector{Float64}, states::Vector{AbstractMaterialState}, Ke::Matrix{Float64}, Qe::Vector{Float64}, Me::Matrix{Float64}) where dim
 
     fill!(Ke, 0.)
     fill!(Qe, 0.)
@@ -51,36 +51,26 @@ function assemble_element!(elem::Element, nodes::Vector{Node{dim}}, material::Ab
         # size(B) = (dim, dim, dim*n)
         for i = 1:ndofs
             Bᵀ_i = Tensor{2,dim}(B[:,:,i]) # 由于B_i对称所以略去转置
-            Qe[i] -= (Bᵀ_i ⊡ σ) * dΩ
+            Qe[i] -= (Bᵀ_i ⊡ σ) * dΩ # 右端项
+
             for j = 1:ndofs
                 B_j = Tensor{2,dim}(B[:,:,j])
                 Ke[i,j] += Bᵀ_i  ⊡ D ⊡ B_j * dΩ
-                Me[i,j] += Bᵀ_i  ⊡ B_j * dΩ * states[i_qpoint].ρ
+                Me[i,j] += Bᵀ_i  ⊡ B_j * dΩ * ρₑ
             end
         end
-
-        # 集中质量矩阵
-        mass = states[i_qpoint].ρ * dΩ
-        println("ρ = ", states[i_qpoint].ρ)
-        for i = 1:ndofs
-            Me[i] += mass
-        end
     end
-    println("sum(Me) = ", sum(Me))
-
-    # Qe 表示体积力和面力对结点载荷的贡献，此处记为 0， 不做计算，在最终的 Q 上一次性添加外载荷 load
 
     return Ke, Qe, Me
 end
-
 
 function assemble_global!(sol::TotalLagragianSolution, elem::Element, Ke, Qe, Me)
     global_dofs = getdofs(elem)
     for (i, I) in enumerate(global_dofs)
         for (j, J) in enumerate(global_dofs)
             sol.K[I,J] += Ke[i,j]
+            sol.M[I,J] += Me[i,j]
         end
         sol.Q[I] += Qe[i]
-        sol.M[I,I] += Me[i]
     end
 end

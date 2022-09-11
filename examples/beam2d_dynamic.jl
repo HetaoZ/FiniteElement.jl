@@ -28,17 +28,20 @@ add_force!(s, node_ids, (x,t) -> (0,-1e7))
 
 # save data
 N = 1000
-save(s, ("x0","x","d","u","a"), (:x0,:x,:d,:u,:a), "../../out/test2d/structure_"*string(N))
+save(s, ("x0","x","d","u","a"), (:x0,:x,:d,:u,:a), "../../out/beam2d_dynamic/structure_"*string(N))
 
 # solve
 t = 0
-for i in 1:1
+for i in 1:10
     global t
+    println("i = ", i, "  t = ", t)
 
     Δt = time_step!(s)
     solve!(s, Δt, t)
     t += Δt
 
     # save final data
-    save(s, ("x0","x","d","u","a"), (:x0,:x,:d,:u,:a), "../../out/test2d/structure_"*string(N+i))
+    save(s, ("x0","x","d","u","a"), (:x0,:x,:d,:u,:a), "../../out/beam2d_dynamic/structure_"*string(N+i))
+
+    
 end
