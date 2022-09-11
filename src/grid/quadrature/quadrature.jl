@@ -58,7 +58,7 @@ for dim in (2, 3)
             n_points = size(data,1)
             points = Vector{Vec{$dim,Float64}}(undef, n_points)
 
-            for p in 1:size(data, 1)
+            for p in axes(data, 1)
                 points[p] = Vec{$dim,Float64}(@ntuple $dim i -> data[p, i])
             end
             weights = data[:, $dim + 1]
