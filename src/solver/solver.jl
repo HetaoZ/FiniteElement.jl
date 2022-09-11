@@ -22,9 +22,10 @@ end
 function newton_raphson_solver!(s::Structure, nrsolver::StaticSolver) 
     
     newton_itr = 0
+    norm_r1 = 1.0
     while true; newton_itr += 1
 
-        if newton_itr > 30
+        if newton_itr > 50
             error("Reached maximum Newton iterations, aborting")
         end
 
@@ -43,8 +44,14 @@ function newton_raphson_solver!(s::Structure, nrsolver::StaticSolver)
         # ---------------
         # 收敛性检查
         norm_r = norm(s.solution.Q)
-        print("Iteration: $newton_itr \tresidual: $(@sprintf("%.8f", norm_r))\n")
-        if norm_r < nrsolver.tolerance
+        if newton_itr == 1
+            norm_r1 = norm_r
+        end
+        print("Iteration: $newton_itr \tresidual: $(@sprintf("%.8f", norm_r/norm_r1))\n")
+
+        save(s, ("x0","x","d","u","a"), (:x0,:x,:d,:u,:a), "../../out/beam3d_static/structure_"*string(1000+newton_itr))
+
+        if norm_r/norm_r1 < nrsolver.tolerance
             break
         end
     end

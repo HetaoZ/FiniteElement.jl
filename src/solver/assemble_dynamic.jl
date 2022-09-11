@@ -27,7 +27,7 @@ load 应该在组装完总体 Q 之后添加到 Q 上，而不是逐个单元加
 
 输入参数 Ke, Qe, Me 是为了避免重复分配内存。
 """
-function assemble_element!(elem::Quadrilateral, nodes::Vector{Node{dim}}, material::AbstractMaterial, de::Vector{Float64}, states::Vector{AbstractMaterialState}, Ke::Matrix{Float64}, Qe::Vector{Float64}, Me::Vector{Float64}) where dim
+function assemble_element!(elem::Element, nodes::Vector{Node{dim}}, material::AbstractMaterial, de::Vector{Float64}, states::Vector{AbstractMaterialState}, Ke::Matrix{Float64}, Qe::Vector{Float64}, Me::Vector{Float64}) where dim
 
     fill!(Ke, 0.)
     fill!(Qe, 0.)

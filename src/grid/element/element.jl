@@ -97,6 +97,12 @@ function reinit!(cv::CellValues{dim}, qr::QuadratureRule, x::Matrix{Float64}) wh
         Jinv = inv(J)
         cv.dNdx[:,:,i_qpoint] = Jinv * cv.dNdξ[:,:,i_qpoint]
 
+        # println()
+        # println("qpoint = ", qr.points[i_qpoint])
+        # println("dNdξ = ")
+        # display(cv.dNdξ[:,:,i_qpoint]); println()
+        # println("detJ = ", det(J))
+        
     end
 end
 

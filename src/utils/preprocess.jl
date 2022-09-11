@@ -30,16 +30,21 @@ function generate(g::RectangularGrid{dim,T}) where dim where T <: CubeElement
         elseif T == Hexahedron
             P1 = nodes[c].id
             P2 = nodes[c[1]+1, c[2], c[3]].id
-            P3 = nodes[c[1], c[2]+1, c[3]].id
-            P4 = nodes[c[1]+1, c[2]+1, c[3]].id
+            P3 = nodes[c[1]+1, c[2]+1, c[3]].id
+            P4 = nodes[c[1], c[2]+1, c[3]].id
 
             P5 = nodes[c[1], c[2], c[3]+1].id
             P6 = nodes[c[1]+1, c[2], c[3]+1].id
-            P7 = nodes[c[1], c[2]+1, c[3]+1].id
-            P8 = nodes[c[1]+1, c[2]+1, c[3]+1].id    
+            P7 = nodes[c[1]+1, c[2]+1, c[3]+1].id
+            P8 = nodes[c[1], c[2]+1, c[3]+1].id  
             
             connection = (P1,P2,P3,P4,P5,P6,P7,P8)
-            faces = ((P1,P5,P7,P3), (P2,P6,P5,P1), (P4,P8,P6,P2), (P3,P7,P8,P4), (P1,P3,P4,P2), (P5,P6,P8,P7))
+            faces = ((P1,P5,P8,P4), 
+                     (P2,P3,P7,P6), 
+                     (P1,P2,P6,P5), 
+                     (P3,P4,P8,P7), 
+                     (P1,P4,P3,P2), 
+                     (P5,P6,P7,P8))
         else
             error("undefined element type")
         end

@@ -31,7 +31,7 @@ end
 
 第一层：
 
-P3--P4
+P4--P3
 
 |    |
 
@@ -39,7 +39,7 @@ P1--P2
 
 第二层：
 
-P7--P8
+P8--P7
 
 |    |
 
@@ -51,14 +51,14 @@ P5--P6
 """
 function hexahedron_volume(P1, P2, P3, P4, P5, P6, P7, P8)
     # 每个面上的四个点的排列顺序是固定的，使得每个facet的法向都指向六面体外侧
-    V1 = four_facets_volume(P1, P5, P7, P3)
-    V2 = four_facets_volume(P2, P4, P8, P6)
+    V1 = four_facets_volume(P1, P5, P8, P4)
+    V2 = four_facets_volume(P2, P3, P7, P6)
 
     V3 = four_facets_volume(P1, P2, P6, P5)
-    V4 = four_facets_volume(P4, P3, P7, P8)
+    V4 = four_facets_volume(P3, P4, P8, P7)
 
-    V5 = four_facets_volume(P1, P3, P4, P2)
-    V6 = four_facets_volume(P5, P6, P8, P7)
+    V5 = four_facets_volume(P1, P4, P3, P2)
+    V6 = four_facets_volume(P5, P6, P7, P8)
 
     V = abs(V1+V2+V3+V4+V5+V6)
     return V

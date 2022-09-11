@@ -2,7 +2,7 @@
 function Element(::Type{Hexahedron}, connection, faces)
     qr, ip = QuadratureRule{3,RefCube}(2), Lagrange{3,RefCube,1}()
     cv = CellScalarValues(qr, ip)
-    return Quadrilateral(connection, faces, cv, qr, ip)
+    return Hexahedron(connection, faces, cv, qr, ip)
 end
 
 function init_volume(elem::Hexahedron, nodes)
