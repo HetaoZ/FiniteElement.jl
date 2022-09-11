@@ -20,8 +20,10 @@ export
     LinearElasticity,
     J2Plasticity,
     NewtonRaphsonSolver,
+    StaticSolver,
     NewmarkSolver,
     ExplicitSolver,
+    DynamicSolver,
     Structure
 
 export

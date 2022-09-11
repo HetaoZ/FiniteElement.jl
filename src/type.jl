@@ -186,7 +186,7 @@ struct StaticSolver <: TotalLagrangianSolver
     tolerance::Float64
 end
 
-const NewtonRaphsonSolver = StaticSolver(1e-6)
+const NewtonRaphsonSolver = StaticSolver(1e-3)
 
 struct DynamicSolver <: TotalLagrangianSolver 
     δ::Float64

@@ -12,7 +12,7 @@ E = 1e9
 material = LinearElasticity(2,E,ν,ρ₀)
 # display(material);println()
 
-solver = NewtonRaphsonSolver
+solver = StaticSolver(1.0)
 
 s = Structure(material, grid, solver)
 
@@ -34,4 +34,4 @@ save(s, ("x0","x","d","u","a"), (:x0,:x,:d,:u,:a), "../../out/test2d/structure_"
 
 # 求解
 solve!(s)
-# save(s, ("x0","x","d","u","a"), (:x0,:x,:d,:u,:a), "../../out/test2d/structure_"*string(N+1))
+save(s, ("x0","x","d","u","a"), (:x0,:x,:d,:u,:a), "../../out/test2d/structure_"*string(N+1))

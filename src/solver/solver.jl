@@ -16,11 +16,8 @@ solve!(s::Structure) = s.movable && static_solver!(s, s.solver)
 solve!(s::Structure, Δt::Real, t::Real) = s.movable && dynamic_solver!(s, Δt, t, s.solver)
 
 function static_solver!(s::Structure, solver::StaticSolver) 
-    if solver == NewtonRaphsonSolver
-        newton_raphson_solver!(s, solver)
-    end
+    newton_raphson_solver!(s, solver)
 end
-
 
 function newton_raphson_solver!(s::Structure, nrsolver::StaticSolver) 
     
@@ -47,7 +44,6 @@ function newton_raphson_solver!(s::Structure, nrsolver::StaticSolver)
         # 收敛性检查
         norm_r = norm(s.solution.Q)
         print("Iteration: $newton_itr \tresidual: $(@sprintf("%.8f", norm_r))\n")
-        save(s, ("x0","x","d","u","a"), (:x0,:x,:d,:u,:a), "../../out/test2d/structure_"*string(1000+newton_itr))
         if norm_r < nrsolver.tolerance
             break
         end
