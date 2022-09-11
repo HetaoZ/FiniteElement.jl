@@ -1,5 +1,10 @@
 # FiniteElement
 
+## Installtion
+```
+] add https://github.com/HetaoZ/FiniteElement.jl.git
+```
+
 ## Examples
 ```
 using FiniteElement
