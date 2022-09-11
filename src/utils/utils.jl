@@ -94,3 +94,8 @@ end
 @inline function betweeneq(a, lo, hi)
     return all(lo .≤ a .≤ hi)
 end
+
+import Tensors.Vec
+function Vec(v::Vector{T}) where T
+    return Vec(Tuple(v)...)
+end

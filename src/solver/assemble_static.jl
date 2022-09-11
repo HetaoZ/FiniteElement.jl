@@ -9,11 +9,18 @@ function assemble_solution!(solution::TotalLagragianSolution, grid::Grid{dim}, m
     Qe = zeros(Float64, ndofs)
     clear_solution!(solution, solver)
 
+    # println("assemble-1:  Q = ", solution.Q[end])
+
+
     for (elem, elem_states) in zip(grid.elements, states)
         de = solution.d[getdofs(elem)]
         assemble_element!(elem, grid.nodes, material, de, elem_states, Ke, Qe)
         assemble_global!(solution, elem, Ke, Qe)
+
+        # println("assemble-2:  Q = ", solution.Q[end])
+
     end
+
 end
 
 function clear_solution!(sol::TotalLagragianSolution, ::StaticSolver)
@@ -39,16 +46,17 @@ function assemble_element!(elem::Quadrilateral, nodes::Vector{Node{dim}}, materi
     for i_qpoint in 1:nq
         ε = compute_strain(elem.cv, i_qpoint, de)
         σ, D = compute_stress_tangent(ε, material, states[i_qpoint]) # size(D) = (dim,dim,dim,dim)
-        detJdV = getdetJdV(elem.cv, i_qpoint)
+        dΩ = getdetJdV(elem.cv, i_qpoint)
 
         ∇N = shape_gradient(elem.cv, i_qpoint) # size(∇N) = (dim,n)
         B = cat(ntuple(k -> node_strain_matrix(∇N[:,k]), n)..., dims = (3,))
         # size(B) = (dim, dim, dim*n)
         for i = 1:dim*n
             Bᵀ_i = Tensor{2,dim}(B[:,:,i]) # 由于B_i对称所以略去转置
+            Qe[i] -= (Bᵀ_i ⊡ σ) * dΩ
             for j = 1:dim*n
                 B_j = Tensor{2,dim}(B[:,:,j])
-                Ke[i,j] += Bᵀ_i  ⊡ D ⊡ B_j * detJdV
+                Ke[i,j] += Bᵀ_i  ⊡ D ⊡ B_j * dΩ
             end
         end
     end

@@ -9,8 +9,11 @@ include("assemble_dynamic.jl")
 # 约束
 include("constrain.jl")
 
-advance!(s::Structure) = s.movable && static_solver!(s, s.solver)
-advance!(s::Structure, Δt::Real, t::Real) = s.movable && dynamic_solver!(s, Δt, t, s.solver)
+"静力学求解"
+solve!(s::Structure) = s.movable && static_solver!(s, s.solver)
+
+"动力学求解一个时间步长"
+solve!(s::Structure, Δt::Real, t::Real) = s.movable && dynamic_solver!(s, Δt, t, s.solver)
 
 function static_solver!(s::Structure, solver::StaticSolver) 
     if solver == NewtonRaphsonSolver
@@ -18,34 +21,35 @@ function static_solver!(s::Structure, solver::StaticSolver)
     end
 end
 
+
 function newton_raphson_solver!(s::Structure, nrsolver::StaticSolver) 
     
-    newton_itr = -1
+    newton_itr = 0
     while true; newton_itr += 1
 
-        if newton_itr > 8
+        if newton_itr > 30
             error("Reached maximum Newton iterations, aborting")
-            break
         end
 
         doassemble!(s)
-
         apply_constrains!(s, 0.)
 
-        norm_r = norm(s.solution.Q)
+        s.solution.Δd =  Symmetric(s.solution.K) \ s.solution.Q  # 需要检验是否符号正确
+        s.solution.d += s.solution.Δd 
 
-        print("Iteration: $newton_itr \tresidual: $(@sprintf("%.8f", norm_r))\n")
-        if norm_r < nrsolver.tolerance
-            break
+        for cell_states in s.states
+            foreach(update_state!, cell_states)
         end
 
-        s.solution.Δd = - Symmetric(s.solution.K) \ s.solution.Q  # 需要检验是否符号正确
-        s.solution.d += s.solution.Δd 
-    end
+        update_nodes!(s)
 
-    for i in eachindex(s.states)
-        for j in eachindex(s.states[i])
-            update_state!(s.states[i][j])
+        # ---------------
+        # 收敛性检查
+        norm_r = norm(s.solution.Q)
+        print("Iteration: $newton_itr \tresidual: $(@sprintf("%.8f", norm_r))\n")
+        save(s, ("x0","x","d","u","a"), (:x0,:x,:d,:u,:a), "../../out/test2d/structure_"*string(1000+newton_itr))
+        if norm_r < nrsolver.tolerance
+            break
         end
     end
 end
@@ -61,6 +65,8 @@ function dynamic_solver!(s::Structure, dt::Real, t::Real, dynamic_solver::Dynami
     for cell_states in s.states
         foreach(update_state!, cell_states)
     end
+
+    update_nodes!(s)
 end
 
 
@@ -98,3 +104,18 @@ function time_step!(s::Structure, ::DynamicSolver)
     return dt
 end
 
+function update_nodes!(s::Structure{dim}) where dim
+    for id in eachindex(s.grid.nodes)
+
+        node_dofs = (id-1)*dim+1:id*dim
+
+        s.grid.nodes[id].f = Vec(s.solution.Q[node_dofs])
+
+        s.grid.nodes[id].d = Vec(s.solution.d[node_dofs])
+        s.grid.nodes[id].x = s.grid.nodes[id].d + s.grid.nodes[id].x0
+        if typeof(s.solver) == DynamicSolver
+            s.grid.nodes[id].u = Vec(s.solution.u[node_dofs])
+            s.grid.nodes[id].a = Vec(s.solution.a[node_dofs])
+        end
+    end
+end

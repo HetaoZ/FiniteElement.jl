@@ -8,7 +8,7 @@ const VTK_CELL_TYPE = Dict(
     Hexahedron=>VTKCellTypes.VTK_HEXAHEDRON
 )
 
-function save_vtk(s::Structure, datanames::Tuple{Vararg{String}}, fields::Tuple{Vararg{Symbol}}, filename::String) 
+function save(s::Structure, datanames::Tuple{Vararg{String}}, fields::Tuple{Vararg{Symbol}}, filename::String) 
     vtkfile = create_vtkfile(s.grid, filename)
     for i in eachindex(datanames)
         vtkfile[datanames[i]] = fetch_data(s, fields[i])

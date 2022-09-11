@@ -12,21 +12,24 @@ using Printf
 
 export
     RectangularGrid,
+    Line,
+    Triangle,
     Quadrilateral,
+    Tetrahedron,
+    Hexahedron,
     LinearElasticity,
     J2Plasticity,
     NewtonRaphsonSolver,
     NewmarkSolver,
     ExplicitSolver,
-    Structure,
-    Node
+    Structure
 
 export
-    advance!,
+    solve!,
     find_nodes,
-    add_dirichlet!,
-    add_node_force!,
-    save_vtk
+    add_bc!,
+    add_force!,
+    save
     
 
 #     J2Plasticity,

@@ -156,7 +156,7 @@ const Tetrahedron = Element{3,4,4,3}
 const Hexahedron = Element{3,8,6,4}
 
 const CubeElement = Union{Line, Quadrilateral, Hexahedron}
-const SimplicityElement = Union{Triangle, Tetrahedron}
+const SimplexElement = Union{Triangle, Tetrahedron}
 
 abstract type AbstractGrid{dim} end
 
@@ -167,7 +167,7 @@ end
 
 abstract type AbstractGridPrototype end
 
-struct RectangularGrid{dim,T<:AbstractElementType} <: AbstractGridPrototype
+struct RectangularGrid{dim, T<:AbstractElementType} <: AbstractGridPrototype
     start
     stop
     nel::NTuple{dim,Int}
@@ -186,7 +186,7 @@ struct StaticSolver <: TotalLagrangianSolver
     tolerance::Float64
 end
 
-const NewtonRaphsonSolver = StaticSolver(1.0)
+const NewtonRaphsonSolver = StaticSolver(1e-6)
 
 struct DynamicSolver <: TotalLagrangianSolver 
     δ::Float64
@@ -254,7 +254,7 @@ dim: 维数
 
 node_ids: 受约束的结点编号向量
 
-force_func: 结点力f关于时间t的函数，例如：t -> Vec(0,0)
+force_func: 结点力f关于坐标和时间(x,t)的函数，例如：(x,t) -> (0,0)
 """
 struct NodeForceConstrain{dim} <: NodeConstrain{dim}
     node_ids::Vector{Int}

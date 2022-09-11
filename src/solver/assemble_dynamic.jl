@@ -21,6 +21,8 @@ function clear_solution!(sol::TotalLagragianSolution, ::DynamicSolver)
 end
 
 """
+如果是线弹性，只需要t=0时刻组装一次K和M，后面每次迭代时组装Q。因此这里和静力学求解器有待改进。
+
 load 应该在组装完总体 Q 之后添加到 Q 上，而不是逐个单元加到 Qe 上。
 
 输入参数 Ke, Qe, Me 是为了避免重复分配内存。
@@ -40,7 +42,7 @@ function assemble_element!(elem::Quadrilateral, nodes::Vector{Node{dim}}, materi
     for i_qpoint in 1:nq
         ε = compute_strain(elem.cv, i_qpoint, de)
         σ, D = compute_stress_tangent(ε, material, states[i_qpoint]) # size(D) = (dim,dim,dim,dim)
-        detJdV = getdetJdV(elem.cv, i_qpoint)
+        dΩ = getdetJdV(elem.cv, i_qpoint)
         ρₑ = state[i_qpoint].ρ
 
         # 组装 Ke 和 Me
@@ -49,13 +51,14 @@ function assemble_element!(elem::Quadrilateral, nodes::Vector{Node{dim}}, materi
         # size(B) = (dim, dim, dim*n)
         for i = 1:ndofs
             Bᵀ_i = Tensor{2,dim}(B[:,:,i]) # 由于B_i对称所以略去转置
+            Qe[i] -= (Bᵀ_i ⊡ σ) * dΩ
             for j = 1:ndofs
                 B_j = Tensor{2,dim}(B[:,:,j])
-                Ke[i,j] += Bᵀ_i  ⊡ D ⊡ B_j * detJdV
+                Ke[i,j] += Bᵀ_i  ⊡ D ⊡ B_j * dΩ
             end
 
             l_i = shape_value(elem.cv, i, i_qpoint)
-            Me[i] += ρₑ * l_i * l_i * detJdV # 需要用算例检验质量是否守恒
+            Me[i] += ρₑ * l_i * l_i * dΩ # 需要用算例检验质量是否守恒
         end
     end
 
