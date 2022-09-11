@@ -43,7 +43,7 @@ function assemble_element!(elem::Element, nodes::Vector{Node{dim}}, material::Ab
         ε = compute_strain(elem.cv, i_qpoint, de)
         σ, D = compute_stress_tangent(ε, material, states[i_qpoint]) # size(D) = (dim,dim,dim,dim)
         dΩ = getdetJdV(elem.cv, i_qpoint)
-        ρₑ = state[i_qpoint].ρ
+        ρₑ = states[i_qpoint].ρ
 
         # 组装 Ke 和 Me
         ∇N = shape_gradient(elem.cv, i_qpoint) # size(∇N) = (dim,n)
@@ -55,12 +55,18 @@ function assemble_element!(elem::Element, nodes::Vector{Node{dim}}, material::Ab
             for j = 1:ndofs
                 B_j = Tensor{2,dim}(B[:,:,j])
                 Ke[i,j] += Bᵀ_i  ⊡ D ⊡ B_j * dΩ
+                Me[i,j] += Bᵀ_i  ⊡ B_j * dΩ * states[i_qpoint].ρ
             end
+        end
 
-            l_i = shape_value(elem.cv, i, i_qpoint)
-            Me[i] += ρₑ * l_i * l_i * dΩ # 需要用算例检验质量是否守恒
+        # 集中质量矩阵
+        mass = states[i_qpoint].ρ * dΩ
+        println("ρ = ", states[i_qpoint].ρ)
+        for i = 1:ndofs
+            Me[i] += mass
         end
     end
+    println("sum(Me) = ", sum(Me))
 
     # Qe 表示体积力和面力对结点载荷的贡献，此处记为 0， 不做计算，在最终的 Q 上一次性添加外载荷 load
 

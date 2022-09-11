@@ -31,7 +31,8 @@ export
     find_nodes,
     add_bc!,
     add_force!,
-    save
+    save,
+    time_step!
     
 
 #     J2Plasticity,

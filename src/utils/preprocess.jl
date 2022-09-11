@@ -59,29 +59,28 @@ function generate(g::RectangularGrid{dim,T}) where dim where T <: CubeElement
     return Grid{dim,T}(nodes, elements)
 end
 
-function cartesian_to_node_id(c::CartesianIndex{3}, nnode)
-    return (c[3]-1) * nnode[1]*nnode[2] + (c[2]-1)*nnode[1] + c[1]
-end
-
-function cartesian_to_node_id(c::CartesianIndex{2}, nnode)
-    return (c[2]-1)*nnode[1] + c[1]
-end
-
-function cartesian_to_node_id(c::CartesianIndex{1}, nnode)
-    return c[1]
-end
-
-function Structure(material::AbstractMaterial, grid::Grid{dim,T}, solver::AbstractSolver) where {dim,T}
-    return Structure{dim}(material, grid, solver, new_states(material, getnelems(grid), getnq(grid)), new_solution(solver, getndofs(grid)), AbstractConstrain[], Dict(), true)
-end
-
-"根据prototype自动生成网格"
-function Structure(material::AbstractMaterial, grid_prototype::AbstractGridPrototype, solver::AbstractSolver)
-    return Structure(material, generate(grid_prototype), solver)
-end
+@inline cartesian_to_node_id(c::CartesianIndex{3}, nnode) = (c[3]-1) * nnode[1]*nnode[2] + (c[2]-1)*nnode[1] + c[1]
+@inline cartesian_to_node_id(c::CartesianIndex{2}, nnode) = (c[2]-1)*nnode[1] + c[1]
+@inline cartesian_to_node_id(c::CartesianIndex{1}, nnode) = c[1]
 
 "获取指定空间范围内包含的结点编号向量"
 function find_nodes(s::Structure, start, stop)
     return find_nodes(s.grid, start, stop)
 end
 
+# ---------------------------------------------------
+# 创建Structure实例
+
+"创建 Structure 实例，可根据 grid_prototype 自动生成网格"
+function Structure(material::AbstractMaterial, grid_prototype::AbstractGridPrototype, solver::AbstractSolver)
+    return Structure(material, generate(grid_prototype), solver)
+end
+
+"创建 Structure 实例"
+function Structure(material::AbstractMaterial, grid::Grid{dim,T}, solver::AbstractSolver) where {dim,T}
+    
+    s = Structure{dim}(material, grid, solver, new_states(material, getnelems(grid), getnq(grid)), new_solution(solver, getndofs(grid)), AbstractConstrain[], Dict(), true)
+
+    update_states!(s)
+    return s
+end

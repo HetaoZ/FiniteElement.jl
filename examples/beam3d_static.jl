@@ -2,9 +2,8 @@ include("../src/FiniteElement.jl")
 using .FiniteElement
 
 # define a 2D rectangular grid
-nel = (4,2,2)
+nel = (2,1,1)
 grid = RectangularGrid{3, Hexahedron}((0,0,0), (2,1,1), nel)
-
 
 
 # define a material

@@ -10,7 +10,7 @@ function init_volume(elem::Quadrilateral, nodes)
     return polygon_area(x[1,:], x[2,:])
 end
 
-function volume(elem::Quadrilateral, nodes::Vector{Node})
+function volume(elem::Quadrilateral, nodes)
     x = elem_x(elem, nodes)
     return polygon_area(x[1,:], x[2,:])
 end

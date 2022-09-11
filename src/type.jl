@@ -30,7 +30,6 @@ mutable struct LinearElasticState{T,S} <: AbstractMaterialState{T,S}
     σ::S # stress
     temp_σ::S
 
-    m₀::T
     ρ::T
 end
 
@@ -40,13 +39,14 @@ mutable struct PlasticState{T,S} <: AbstractMaterialState{T,S}
     ϵᵖ::S # plastic strain
     σ::S # stress
     k::T # hardening variable
+    σᵥ::T # von Mises stress
 
     # Store temporary values used during equilibrium iterations
     temp_ϵᵖ::S
     temp_σ::S
     temp_k::T
+    temp_σᵥ::T
 
-    m₀::T
     ρ::T
 end
 

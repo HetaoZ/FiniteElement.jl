@@ -35,10 +35,8 @@ function newton_raphson_solver!(s::Structure, nrsolver::StaticSolver)
         s.solution.Δd =  Symmetric(s.solution.K) \ s.solution.Q  # 需要检验是否符号正确
         s.solution.d += s.solution.Δd 
 
-        for cell_states in s.states
-            foreach(update_state!, cell_states)
-        end
 
+        update_states!(s)
         update_nodes!(s)
 
         # ---------------
@@ -65,10 +63,7 @@ function dynamic_solver!(s::Structure, dt::Real, t::Real, dynamic_solver::Dynami
     core_solver!(s, dt, dynamic_solver.δ, dynamic_solver.α)
     set_disp!(s, dt, t)
 
-    for cell_states in s.states
-        foreach(update_state!, cell_states)
-    end
-
+    update_states!(s)
     update_nodes!(s)
 end
 

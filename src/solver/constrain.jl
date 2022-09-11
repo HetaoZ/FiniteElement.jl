@@ -72,7 +72,7 @@ const CONSTRAIN_ALPHA = 1.0e14
 """
 施加所有约束
 """
-function apply_constrains!(s::Structure, t::Float64)
+function apply_constrains!(s::Structure, t)
     for c in s.constrains
         apply_constrain!(s.solution, c, s.grid.nodes, t)
     end
@@ -81,7 +81,7 @@ end
 """
 施加位移约束
 """
-function apply_constrain!(sol::TotalLagragianSolution, constrain::NodeDisplacementConstrain{dim}, nodes::Vector{Node{dim}}, t::Float64) where dim
+function apply_constrain!(sol::TotalLagragianSolution, constrain::NodeDisplacementConstrain{dim}, nodes::Vector{Node{dim}}, t) where dim
 
     for node_id in constrain.node_ids
         for (i, elem_dof) in enumerate(constrain.constrained_dofs)
@@ -125,7 +125,7 @@ end
 """
 施加力约束
 """
-function apply_constrain!(sol::TotalLagragianSolution, constrain::NodeForceConstrain{dim}, nodes::Vector{Node{dim}}, t::Float64) where dim 
+function apply_constrain!(sol::TotalLagragianSolution, constrain::NodeForceConstrain{dim}, nodes::Vector{Node{dim}}, t) where dim 
 
     for node_id in constrain.node_ids
 

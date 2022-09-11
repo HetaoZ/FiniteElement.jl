@@ -53,7 +53,6 @@ function LinearElasticState(dim)
     return LinearElasticState(
                 zero(SymmetricTensor{2, dim}),
                 zero(SymmetricTensor{2, dim}),
-                0.0,
                 0.0)
 end
 
@@ -62,6 +61,7 @@ function PlasticState(dim)
                 zero(SymmetricTensor{2, dim}),
                 zero(SymmetricTensor{2, dim}),
                 0.0,
+                0.0,
                 zero(SymmetricTensor{2, dim}),
                 zero(SymmetricTensor{2, dim}),
                 0.0,
@@ -69,14 +69,25 @@ function PlasticState(dim)
                 0.0)
 end
 
-function update_state!(state::LinearElasticState)
-    state.σ = state.temp_σ
+function update_states!(s::Structure)
+    for (elem_id, cell_states) in enumerate(s.states)
+        for state in cell_states
+            update_state!(state, s.grid.elements[elem_id], s.grid.nodes, s.material)
+        end
+    end
 end
 
-function update_state!(state::PlasticState)
+function update_state!(state::LinearElasticState, elem::Element, nodes, material)
+    state.σ = state.temp_σ
+    state.ρ = elem_density(elem, nodes, material)
+end
+
+function update_state!(state::PlasticState, elem::Element, nodes, material)
     state.ϵᵖ = state.temp_ϵᵖ
     state.σ = state.temp_σ
+    state.σᵥ = state.temp_σᵥ
     state.k = state.temp_k
+    state.ρ = elem_density(elem, nodes, material)
 end
 
 """
@@ -140,6 +151,8 @@ function compute_stress_tangent(ϵ::SymmetricTensor, material::J2Plasticity, sta
         state.temp_ϵᵖ = state.ϵᵖ + Δϵᵖ  # plastic strain
         state.temp_k = state.k + μ     # hardening variable
         state.temp_σ = σ               # updated stress
+        state.temp_σᵥ = σᵗₑ 
+        
         return state.temp_σ, D
     end
 end
