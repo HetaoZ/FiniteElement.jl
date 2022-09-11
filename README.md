@@ -1,6 +1,8 @@
 # FiniteElement
 
-## Installtion
+A developing package for FEM analysis. DO NOT use it in working environment.
+
+## Installation
 ```
 ] add https://github.com/HetaoZ/FiniteElement.jl.git
 ```
