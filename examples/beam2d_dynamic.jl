@@ -24,7 +24,8 @@ add_bc!(s, node_ids, cdofs, t -> (0,0))
 
 # add external loads
 node_ids = find_nodes(s, (2-0.1, 0.5), (2+0.1, 1e2))
-add_force!(s, node_ids, (x,t) -> (0,-1e7))
+add_force!(s, node_ids, (x,t) -> (0,-1e6))
+
 
 # save data
 N = 1000

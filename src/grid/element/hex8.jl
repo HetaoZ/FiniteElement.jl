@@ -10,7 +10,7 @@ function init_volume(elem::Hexahedron, nodes)
     return hexahedron_volume(x[:,1], x[:,2], x[:,3], x[:,4], x[:,5], x[:,6], x[:,7], x[:,8])
 end
 
-function volume(elem::Hexahedron, nodes::Vector{Node})
+function volume(elem::Hexahedron, nodes::Vector{Node{3}})
     x = elem_x(elem, nodes)
     return hexahedron_volume(x[:,1], x[:,2], x[:,3], x[:,4], x[:,5], x[:,6], x[:,7], x[:,8])
 end
