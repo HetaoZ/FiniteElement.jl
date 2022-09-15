@@ -56,7 +56,7 @@ function generate(g::RectangularGrid{dim,T}) where dim where T <: CubeElement
     nodes = reshape(nodes, (length(nodes),))
     elements = reshape(elements, (length(elements),))
 
-    return Grid{dim,T}(nodes, elements)
+    return Grid{dim,T}(nodes, elements, g)
 end
 
 @inline cartesian_to_node_id(c::CartesianIndex{3}, nnode) = (c[3]-1) * nnode[1]*nnode[2] + (c[2]-1)*nnode[1] + c[1]

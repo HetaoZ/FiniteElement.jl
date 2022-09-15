@@ -158,20 +158,25 @@ const Hexahedron = Element{3,8,6,4}
 const CubeElement = Union{Line, Quadrilateral, Hexahedron}
 const SimplexElement = Union{Triangle, Tetrahedron}
 
-abstract type AbstractGrid{dim} end
-
-mutable struct Grid{dim, T<:AbstractElementType} <: AbstractGrid{dim}
-    nodes::Vector{Node{dim}}
-    elements::Vector{T}
-end
-
 abstract type AbstractGridPrototype end
 
+"表示没有使用原型网格"
+struct NonePrototype <: AbstractGridPrototype end 
 struct RectangularGrid{dim, T<:AbstractElementType} <: AbstractGridPrototype
     start
     stop
     nel::NTuple{dim,Int}
 end
+
+abstract type AbstractGrid{dim} end
+
+mutable struct Grid{dim, T<:AbstractElementType} <: AbstractGrid{dim}
+    nodes::Vector{Node{dim}}
+    elements::Vector{T}
+    prototype::AbstractGridPrototype
+end
+
+
 
 # ----------------------------------------------------------
 # 求解格式

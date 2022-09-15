@@ -9,6 +9,10 @@ include("assemble_dynamic.jl")
 # 约束
 include("constrain.jl")
 
+"别名"
+advance!(s::Structure) = solve!(s)
+advance!(s::Structure, Δt::Real, t::Real) = solve!(s, Δt, t)
+
 "静力学求解"
 solve!(s::Structure) = s.movable && static_solver!(s, s.solver)
 

@@ -5,6 +5,11 @@ include("quadrature/quadrature.jl")
 # 母单元上的插值,和母单元到物理单元的映射?
 include("interpolation/interpolation.jl")
 
+"不使用原型网格"
+function Grid{dim,T}(nodes, elements) where dim where T <: AbstractElementType
+    return Grid{dim,T}(nodes, elements, NonePrototype())
+end
+
 Node(dim::Int) = Node{dim}(0,tensorzeros(dim),tensorzeros(dim),tensorzeros(dim),tensorzeros(dim),tensorzeros(dim),tensorzeros(dim))
 
 getdim(node::Node{dim}) where dim = dim

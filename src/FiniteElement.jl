@@ -1,12 +1,11 @@
 module FiniteElement
 using Reexport
 
-@reexport using Tensors
+using Tensors
 using WriteVTK
-
 using LinearAlgebra
 using SparseArrays
-using ReadGmsh
+# using ReadGmsh
 using Base: @propagate_inbounds
 using Printf
 
@@ -28,6 +27,7 @@ export
 
 export
     solve!,
+    advance!,
     find_nodes,
     add_bc!,
     add_force!,
@@ -63,5 +63,6 @@ include("solver/solver.jl")
 # pre/post-process
 include("utils/preprocess.jl")
 include("utils/postprocess.jl")
+include("utils/surface.jl")
 
 end
