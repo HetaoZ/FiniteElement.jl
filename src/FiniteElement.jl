@@ -5,7 +5,6 @@ using Tensors
 using WriteVTK
 using LinearAlgebra
 using SparseArrays
-# using ReadGmsh
 using Base: @propagate_inbounds
 using Printf
 
