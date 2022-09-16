@@ -5,10 +5,19 @@ include("quadrature/quadrature.jl")
 # 母单元上的插值,和母单元到物理单元的映射?
 include("interpolation/interpolation.jl")
 
-"不使用原型网格"
-function Grid{dim,T}(nodes, elements) where dim where T <: AbstractElementType
-    return Grid{dim,T}(nodes, elements, NonePrototype())
+"不使用原型网格， 已知 surface"
+function Grid{dim,T}(nodes, elements, surface_topo) where dim where T <: AbstractElementType
+    return Grid{dim,T}(nodes, elements, surface_topo, NonePrototype())
 end
+
+"不使用原型网格，且暂无定义 surface "
+function Grid{dim,T}(nodes, elements) where dim where T <: AbstractElementType
+    surface_topo = SurfaceTopology(eltype(elements))
+    return Grid{dim,T}(nodes, elements, surface_topo, NonePrototype())
+end
+
+SurfaceTopology(::Type{Element{dim,N,M,L}}) where {dim,N,M,L} = SurfaceTopology(L)
+SurfaceTopology(L::Int) = SurfaceTopology(zeros(Int,L,0))
 
 Node(dim::Int) = Node{dim}(0,tensorzeros(dim),tensorzeros(dim),tensorzeros(dim),tensorzeros(dim),tensorzeros(dim),tensorzeros(dim))
 

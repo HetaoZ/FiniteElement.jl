@@ -158,6 +158,12 @@ const Hexahedron = Element{3,8,6,4}
 const CubeElement = Union{Line, Quadrilateral, Hexahedron}
 const SimplexElement = Union{Triangle, Tetrahedron}
 
+abstract type AbstractTopology end
+
+mutable struct SurfaceTopology <:AbstractTopology
+    faces::Matrix{Int} # 每列代表一个 face 的结点编号，face 可以是任意形状
+end
+
 abstract type AbstractGridPrototype end
 
 "表示没有使用原型网格"
@@ -173,9 +179,9 @@ abstract type AbstractGrid{dim} end
 mutable struct Grid{dim, T<:AbstractElementType} <: AbstractGrid{dim}
     nodes::Vector{Node{dim}}
     elements::Vector{T}
+    surface_topology::SurfaceTopology
     prototype::AbstractGridPrototype
 end
-
 
 
 # ----------------------------------------------------------

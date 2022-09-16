@@ -33,7 +33,7 @@ export
     save,
     time_step!,
     read_grid,
-    extend_surface
+    select_surface!
     
 
 

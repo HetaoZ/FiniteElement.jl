@@ -42,152 +42,42 @@ end
 # ---------------------------
 # for FiniteElement.jl
 
-function getsurface!(s::FiniteElement.Structure{1})
-    if typeof(s.grid.prototype) <: FiniteElement.RectangluarGrid  # 方形网格
-        x = ((s.grid.nodes[1].x,), (s.grid.nodes[2].x,))
-        u = ((s.grid.nodes[1].u,), (s.grid.nodes[2].u,))
-        normals = zeros(Float64, 1, 1)
-        normals[:,1] = [-1]
-        normals[:,2] = [1]
-        start, stop = s.grid.nodes[1].x, s.grid.nodes[2].x
-        return Surface{M,1}(x, u, normals, start, stop)
-    else
-        error("Couldn't resolve such grid and get its surface")
+getsurface!(s::Structure) = getsurface!(s.grid, s.grid.surface_topology)
+getsurface!(s::Structure, topo::SurfaceTopology) = getsurface!(s.grid, topo)
+
+function getsurface!(grid::Grid{dim,T}, topo::SurfaceTopology) where {dim,T<:Union{Line,Triangle,Quadrilateral,Tetrahedron}}
+    L, M = size(topo.faces)
+    x = [ntuple(i->vec2tuple(grid.nodes[topo.faces[i,i_face]].x), L) for i_face in 1:M]
+    u = [ntuple(i->vec2tuple(grid.nodes[topo.faces[i,i_face]].u), L) for i_face in 1:M]
+    normals = zeros(Float64,dim,size(topo.faces,2))
+    for j in axes(normals,2)
+        normals[:,j] = getnormal(x[j])
     end
+    x = Tuple(x)
+    u = Tuple(u)
+    start, stop = getstartstop(x)
+    return Surface{M,dim}(x,u,normals,start,stop)
 end
 
-function getsurface!(s::FiniteElement.Structure{2})
-    if typeof(s.grid.prototype) <: FiniteElement.RectangluarGrid  # 方形网格
-        nel = s.grid.prototype.nel
-        M = sum(nel) * 2  # n faces
-        nodes = reshape(s.grid.nodes, nel .+ 1)
-        x = fill(((0.,0.), (0.,0.)), M)
-        u = fill(((0.,0.), (0.,0.)), M)
-        xmin, xmax, ymin, ymax = nodes[1].x[1], nodes[end].x[1], nodes[1].x[2], nodes[end].x[2]
-        for i = 1:nel[1]
-            # Bottom: nodes[1:nx+1,1]
-            x[i] = Tuple.((nodes[i,1].x, nodes[i+1,1].x))
-            u[i] = Tuple.((nodes[i,1].u, nodes[i+1,1].u))
-            xmin = min(xmin, nodes[i,1].x[1])
-            xmax = max(xmax, nodes[i,1].x[1])
-            ymin = min(ymin, nodes[i,1].x[2])
-            ymax = max(ymax, nodes[i,1].x[2])
-            # Top: nodes[1:nx+1,end]
-            x[i+nel[1]] = Tuple.((nodes[i,end].x, nodes[i+1,end].x))
-            u[i+nel[1]] = Tuple.((nodes[i,end].u, nodes[i+1,end].u))
-            xmin = min(xmin, nodes[i,end].x[1])
-            xmax = max(xmax, nodes[i,end].x[1])
-            ymin = min(ymin, nodes[i,end].x[2])
-            ymax = max(ymax, nodes[i,end].x[2])
-        end
-        for j = 1:nel[2]
-            # Left: nodes[1,1:ny+1]
-            x[i+2*nel[1]] = Tuple.((nodes[1,j].x, nodes[1,j+1].x))
-            u[i+2*nel[1]] = Tuple.((nodes[1,j].u, nodes[1,j+1].u))
-            xmin = min(xmin, nodes[1,j].x[1])
-            xmax = max(xmax, nodes[1,j].x[1])
-            ymin = min(ymin, nodes[1,j].x[2])
-            ymax = max(ymax, nodes[1,j].x[2])
-            # Right: nodes[end,1:ny+1]
-            x[i+2*nel[1]+nel[2]] = Tuple.((nodes[end,j].x, nodes[end,j+1].x))
-            u[i+2*nel[1]+nel[2]] = Tuple.((nodes[end,j].u, nodes[end,j+1].u))
-            xmin = min(xmin, nodes[end,j].x[1])
-            xmax = max(xmax, nodes[end,j].x[1])
-            ymin = min(ymin, nodes[end,j].x[2])
-            ymax = max(ymax, nodes[end,j].x[2])
-        end
-        normals = zeros(Float64, 2, M)
-        for (i,face) in enumerate(x)
-            normals[:,i] = getnormal(face)
-        end
-        start, stop = (xmin, ymin), (xmax, ymax)
-        return Surface{M,2}(Tuple(x), Tuple(u), normals, start, stop)
-    else
-        error("Couldn't resolve such grid and get its surface")
+const ZERO_TRIANGLE = ((0.,0.,0.),(0.,0.,0.),(0.,0.,0.))
+
+function getsurface!(grid::Grid{3,Hexahedron}, topo::SurfaceTopology)
+    x = fill(ZERO_TRIANGLE, 0)
+    u = fill(ZERO_TRIANGLE, 0)
+    normals = zeros(Float64, 3, 0)
+    start = (0.,0.,0.)
+    stop  = (0.,0.,0.)
+
+    for face in topo.faces
+        face_x, face_u, face_normals, face_start, face_stop = convert_for_surface(face, grid)
+        append!(x, face_x)
+        append!(u, face_u)
+        normals = hcat(normals, face_normals)
+        start = ntuple(i->min(start[i], face_start[i]), dim)
+        stop  = ntuple(i->max( stop[i],  face_stop[i]), dim)
     end
-end
 
-function getsurface!(s::FiniteElement.Structure{3})
-    if typeof(s.grid.prototype) <: FiniteElement.RectangularGrid  # 方形网格
-        nel = s.grid.prototype.nel
-        M = (nel[1]*nel[3] + nel[2]*nel[3] + nel[1]*nel[2])*8 # M faces (refined)
-        nodes = reshape(s.grid.nodes, nel .+ 1)
-        x = fill(((0.,0.,0.), (0.,0.,0.),(0.,0.,0.)), M)
-        u = fill(((0.,0.,0.), (0.,0.,0.),(0.,0.,0.)), M)
-        start = nodes[1].x
-        stop = nodes[end].x
-
-        for i = 1:nel[1], k = 1:nel[3]
-            # South: nodes[:,1,:]
-            i_quad = i+(k-1)*nel[1]
-            faces_range = i_quad*4-3:i_quad*4
-
-            x[faces_range], u[faces_range], start, stop = getrefinedfaces((nodes[i,1,k], 
-                             nodes[i+1,1,k], 
-                             nodes[i+1,1,k+1], 
-                             nodes[i,1,k+1]), 
-                             start, stop)
- 
-            # North: nodes[:,end,:]
-            i_quad = i+(k-1)*nel[1] + nel[1]*nel[3]
-            faces_range = i_quad*4-3:i_quad*4
-
-            x[faces_range], u[faces_range], start, stop = getrefinedfaces((nodes[i,end,k], 
-                             nodes[i,end,k+1], 
-                             nodes[i+1,end,k+1], 
-                             nodes[i+1,end,k]), 
-                             start, stop)
-        end
-        for j = 1:nel[2], k = 1:nel[3]
-            # West: nodes[1,:,:]
-            i_quad = j+(k-1)*nel[2] + 2*nel[1]*nel[3]
-            faces_range = i_quad*4-3:i_quad*4
-
-            x[faces_range], u[faces_range], start, stop = getrefinedfaces((nodes[1,j,k], 
-                             nodes[1,j,k+1], 
-                             nodes[1,j+1,k+1], 
-                             nodes[1,j+1,k]), 
-                             start, stop)
- 
-            # East: nodes[end,:,:]
-            i_quad = j+(k-1)*nel[2] + 2*nel[1]*nel[3] + nel[2]*nel[3]
-            faces_range = i_quad*4-3:i_quad*4
-
-            x[faces_range], u[faces_range], start, stop = getrefinedfaces((nodes[end,j,k], 
-                             nodes[end,j+1,k], 
-                             nodes[end,j+1,k+1], 
-                             nodes[end,j,k+1]), 
-                             start, stop)
-        end
-        for i = 1:nel[1], j = 1:nel[2]
-            # Bottom: nodes[:,:,1]
-            i_quad = i+(j-1)*nel[1] + 2*(nel[1]+nel[2])*nel[3]
-            faces_range = i_quad*4-3:i_quad*4
-
-            x[faces_range], u[faces_range], start, stop = getrefinedfaces((nodes[i,j,1], 
-                             nodes[i,j+1,1], 
-                             nodes[i+1,j+1,1], 
-                             nodes[i+1,j,1]), 
-                             start, stop)
- 
-            # Top: nodes[:,:,end]
-            i_quad = i+(j-1)*nel[1] + 2*(nel[1]+nel[2])*nel[3] + nel[1]*nel[2]
-            faces_range = i_quad*4-3:i_quad*4
-
-            x[faces_range], u[faces_range], start, stop = getrefinedfaces((nodes[i,j,end], 
-                             nodes[i+1,j,end], 
-                             nodes[i+1,j+1,end], 
-                             nodes[i,j+1,end]), 
-                             start, stop)
-        end
-        normals = zeros(Float64, 3, M)
-        for (i,face) in enumerate(x)
-            normals[:,i] = getnormal(face)
-        end
-        return Surface{M,3}(Tuple(x), Tuple(u), normals, start, stop)
-    else
-        error("Couldn't resolve such grid and get its surface")
-    end
+    return Surface{M,dim}(x,u,normals,start,stop)
 end
 
 function getquadcenter(nodes::NTuple{4,Node{3}})
@@ -229,52 +119,6 @@ function getnormal(face::NTuple{3,NTuple{3,Float64}})
     return n
 end
 
-
-# -----------------------------
-# 对 surface 添加操作
-
-function empty_surface(::Type{Element{dim,N,M,L}}) where {dim,N,M,L}
-    x = ()
-    u = ()
-    normals = zeros(Float64,dim,0)
-    start = ntuple(i->0.,dim)
-    stop = ntuple(i->0.,dim)
-    return Surface{0,dim}(x,u,normals,start,stop)
-end
-
-"将 grid 位于指定 box 空间范围内的 face 加入 surface"
-function extend_surface(grid::Grid{dim,T}, start, stop; surface::Surface{M,dim} = empty_surface(T)) where {M,T,dim}
-
-    if M == 0
-        surface_x = NTuple{dim,NTuple{dim,Float64}}[]
-        surface_u = NTuple{dim,NTuple{dim,Float64}}[]
-    else
-        surface_x, surface_u = collect(surface.x), collect(surface.u)
-    end
-    surface_normals, surface_start, surface_stop = surface.normals, surface.start, surface.stop
-
-    for elem in grid.elements
-        for face in elem.faces
-            need_to_add = true
-            for node_id in face
-                if !point_in_box(grid.nodes[node_id].x, start, stop)
-                    need_to_add = false
-                end
-            end
-            if need_to_add
-                face_x, face_u, face_normals, face_start, face_stop = convert_for_surface(face, grid)
-                append!(surface_x, face_x)
-                append!(surface_u, face_u)
-                surface_normals = hcat(surface_normals, face_normals)
-                surface_start = ntuple(i -> min(surface_start[i], face_start[i]), dim)
-                surface_stop = ntuple(i -> max(surface_stop[i], face_stop[i]), dim)
-            end
-        end
-    end
-
-    return Surface{length(surface_x), dim}(Tuple(surface_x), Tuple(surface_u), surface_normals, surface_start, surface_stop)
-end
-
 "从 element 的指定 face 提取 surface 所需数据"
 function convert_for_surface(face::NTuple{L,Int}, grid::Grid{dim,T}) where {L,dim,T <: Union{Line,Triangle,Quadrilateral,Tetrahedron}}
     x = ntuple(i -> vec2tuple(grid.nodes[face[i]].x), dim)
@@ -294,6 +138,105 @@ function convert_for_surface(face::NTuple{L,Int}, grid::Grid{dim,Hexahedron}) wh
         normals[:,j] = getnormal(x[j])
     end
     return x, u, normals, start, stop
+end
+
+# -------------------------------------
+# get surface topology
+
+const EPS = 1e-10
+const INF = 1e10
+
+function get_surface_topo!(grid::Grid{1,T}) where T <: AbstractElementType
+    if typeof(grid.prototype) <: RectangularGrid  # 方形网格
+        x = grid.prototype.start[1]
+        start = (x-EPS,)
+        stop  = (x+EPS,)
+        select_surface!(grid, start, stop)
+
+        x = grid.prototype.stop[1]
+        start = (x-EPS,)
+        stop  = (x+EPS,)
+        select_surface!(grid, start, stop)
+    else
+        error("Couldn't resolve such grid and get its surface")
+    end
+end
+
+function get_surface_topo!(grid::Grid{2,T}) where T <: AbstractElementType
+    if typeof(grid.prototype) <: RectangularGrid  # 方形网格
+        xmin, xmax = grid.prototype.start[1], grid.prototype.stop[1]
+        ymin, ymax = grid.prototype.start[2], grid.prototype.stop[2]
+
+        start = (-INF,ymin-EPS)
+        stop  = ( INF,ymin+EPS)
+        select_surface!(grid, start, stop)
+
+        start = (-INF,ymax-EPS)
+        stop  = ( INF,ymax+EPS)
+        select_surface!(grid, start, stop)
+
+        start = (xmin-EPS,-INF)
+        stop  = (xmin+EPS, INF)
+        select_surface!(grid, start, stop)
+
+        start = (xmax-EPS,-INF)
+        stop  = (xmax+EPS, INF)
+        select_surface!(grid, start, stop)
+    else
+        error("Couldn't resolve such grid and get its surface")
+    end
+end
+
+function get_surface_topo!(grid::Grid{3,T}) where T <: AbstractElementType
+    if typeof(grid.prototype) <: RectangularGrid  # 方形网格
+        xmin, xmax = grid.prototype.start[1], grid.prototype.stop[1]
+        ymin, ymax = grid.prototype.start[2], grid.prototype.stop[2]
+        zmin, zmax = grid.prototype.start[3], grid.prototype.stop[3]
+
+        start = (-INF,-INF,zmin-EPS)
+        stop  = ( INF, INF,zmin+EPS)
+        select_surface!(grid, start, stop)
+
+        start = (-INF,-INF,zmax-EPS)
+        stop  = ( INF, INF,zmax+EPS)
+        select_surface!(grid, start, stop)
+
+        start = (xmin-EPS, -INF, -INF)
+        stop  = (xmin+EPS,  INF,  INF)
+        select_surface!(grid, start, stop)
+
+        start = (xmax-EPS, -INF, -INF)
+        stop  = (xmax+EPS,  INF,  INF)
+        select_surface!(grid, start, stop)
+
+        start = (-INF, ymin-EPS, -INF)
+        stop  = ( INF, ymin+EPS,  INF)
+        select_surface!(grid, start, stop)
+
+        start = (-INF, ymax-EPS, -INF)
+        stop  = ( INF, ymax+EPS,  INF)
+        select_surface!(grid, start, stop)
+    else
+        error("Couldn't resolve such grid and get its surface")
+    end
+end
+
+"将 grid 位于指定 box 空间范围内的 face 加入 surface_topology"
+function select_surface!(grid::Grid{dim,T}, start, stop) where {dim,T}
+
+    for elem in grid.elements
+        for face in elem.faces
+            need_to_add = true
+            for node_id in face
+                if !point_in_box(grid.nodes[node_id].x, start, stop)
+                    need_to_add = false
+                end
+            end
+            if need_to_add
+                grid.surface_topology.faces = hcat(grid.surface_topology.faces, reshape(collect(face), (length(face),1)))
+            end
+        end
+    end
 end
 
 function point_in_box(point, start, stop)
