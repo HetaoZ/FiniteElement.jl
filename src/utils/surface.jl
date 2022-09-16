@@ -228,3 +228,69 @@ function getnormal(face::NTuple{3,NTuple{3,Float64}})
     n = normalize( cross(v1, v2) )
     return n
 end
+
+
+# -----------------------------
+# 对 surface 添加操作
+
+"将 grid 位于指定 box 空间范围内的 face 加入 surface"
+function extend_surface(grid::Grid{dim,T}, surface::Surface{M,dim}, start, stop) where {M,T,dim}
+
+    x, u, normals, start, stop = collect(surface.x), collect(surface.u), surface.normals, surface.start, surface.stop
+
+    for elem in grid.elements
+        for face in elem.faces
+            need_to_add = true
+            for node_id in face
+                if !point_in_box(grid.nodes[node_id].x, start, stop)
+                    need_to_add = false
+                end
+            end
+            if need_to_add
+                face_x, face_u, face_normals, face_start, face_stop = convert_for_surface(face, grid)
+                append!(x, face_x)
+                append!(u, face_u)
+                normals = hcat(normals, face_normals)
+                start, stop = ntuple(i -> min(start[i], face_start[i]), dim), ntuple(i -> max(stop[i], face_stop[i]), dim)
+            end
+        end
+    end
+
+    return Surface{length(x), dim}(Tuple(x), Tuple(u), normals, start, stop)
+end
+
+"从 element 的指定 face 提取 surface 所需数据"
+function convert_for_surface(face::NTuple{L,Int}, grid::Grid{dim,T}) where {L,dim,T <: Union{Line,Triangle,Quadrilateral,Tetrahedron}}
+    x = ntuple(i -> vec2tuple(grid.nodes[face[i]].x), dim)
+    u = ntuple(i -> vec2tuple(grid.nodes[face[i]].u), dim)
+    start, stop = getstartstop((x,))
+    normals = zeros(Float64, dim, 1)
+    normals[:,1] = getnormal(x)
+    return [x], [u], normals, start, stop
+end
+
+"从 element 的指定 face 提取 surface 所需数据"
+function convert_for_surface(face::NTuple{L,Int}, grid::Grid{dim,Hexahedron}) where {L,dim}
+    start, stop = ntuple(k->0., dim), ntuple(k->0., dim)
+    x, u, start, stop = getrefinedfaces([grid.nodes[i] for i in face], start, stop)
+    normals = zeros(Float64, dim, length(x))
+    for j in eachindex(x)
+        normals[:,j] = getnormal(x[j])
+    end
+    return x, u, normals, start, stop
+end
+
+function point_in_box(point, start, stop)
+    return betweeneq(point, start, stop)
+end
+
+"更新 surface 的 normals, start, stop 信息"
+function refresh!(surface::Surface{M,dim}) where {M,dim}
+    surface.normals = zeros(Float64, dim, M)
+    for m in 1:M
+        surface.normals[:,m] = getnormal(surface.x[m])
+        face_start, face_stop = getstartstop(surface.x[m])
+        surface.start = ntuple(i->min(surface.start[i],face_start[i]), dim)
+        surface.stop  = ntuple(i->max(surface.stop[i],face_stop[i]), dim)
+    end
+end

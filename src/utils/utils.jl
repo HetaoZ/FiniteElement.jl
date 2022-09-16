@@ -99,3 +99,7 @@ import Tensors.Vec
 function Vec(v::Vector{T}) where T
     return Vec(Tuple(v)...)
 end
+
+@inline function vec2tuple(v)
+    return Tuple(collect(v))
+end
