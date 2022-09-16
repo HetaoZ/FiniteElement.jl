@@ -7,6 +7,7 @@ using LinearAlgebra
 using SparseArrays
 using Base: @propagate_inbounds
 using Printf
+using ReadGmsh
 
 export
     RectangularGrid,
@@ -31,25 +32,9 @@ export
     add_bc!,
     add_force!,
     save,
-    time_step!
+    time_step!,
+    read_gmsh
     
-
-#     J2Plasticity,
-#     vonMises,
-#     PlasticStructure,
-#     Surface,
-#     NewtonRaphsonSolver,
-#     NewmarkSolver,
-#     ExplicitSolver
-    
-# export
-#     generate_grid,
-#     add_bc!,
-#     
-#     fetch_surface,
-#     fetch_data,
-#     save_to_vtk,
-#     time_step!
 
 
 # main files
@@ -63,5 +48,6 @@ include("solver/solver.jl")
 include("utils/preprocess.jl")
 include("utils/postprocess.jl")
 include("utils/surface.jl")
+include("utils/gmsh_interface.jl")
 
 end

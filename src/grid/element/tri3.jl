@@ -1,8 +1,35 @@
-"3结点二维三角形单元"
+
+"""
+3结点二维三角形单元
+
+结点按如下顺序排列：
+
+P3
+
+|  
+
+P1--P2
+"""
+function Element(t::Type{Triangle}, connection)
+    qr, ip = QuadratureRule{2,RefTetrahedron}(2), Lagrange{2,RefTetrahedron,1}()
+    cv = CellScalarValues(qr, ip)
+    faces = infer_faces(t, connection)
+    return Triangle(connection, faces, cv, qr, ip)
+end
+
 function Element(::Type{Triangle}, connection, faces)
     qr, ip = QuadratureRule{2,RefTetrahedron}(2), Lagrange{2,RefTetrahedron,1}()
     cv = CellScalarValues(qr, ip)
     return Triangle(connection, faces, cv, qr, ip)
+end
+
+"从connection和Element推断faces"
+function infer_faces(::Type{Triangle}, c)
+    faces = (
+    (c[1],c[2]), 
+    (c[2],c[3]), 
+    (c[3],c[1]))
+    return faces
 end
 
 function init_volume(elem::Triangle, nodes::Vector{Node})

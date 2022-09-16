@@ -1,8 +1,43 @@
+
+"""
+4结点三维四面体单元
+
+结点按如下顺序排列：
+
+第一层：
+
+P3
+
+|  
+
+P1--P2
+
+第二层：
+
+P4
+"""
+function Element(t::Type{Tetrahedron}, connection)
+    qr, ip = QuadratureRule{3,RefTetrahedron}(2), Lagrange{3,RefCube,1}()
+    cv = CellScalarValues(qr, ip)
+    faces = infer_faces(t, connection)
+    return Tetrahedron(connection, faces, cv, qr, ip)
+end
+
 "4结点三维四面体单元"
 function Element(::Type{Tetrahedron}, connection, faces)
     qr, ip = QuadratureRule{3,RefTetrahedron}(2), Lagrange{3,RefCube,1}()
     cv = CellScalarValues(qr, ip)
     return Tetrahedron(connection, faces, cv, qr, ip)
+end
+
+"从connection和Element推断faces"
+function infer_faces(::Type{Tetrahedron}, c)
+    faces = (
+    (c[1],c[3],c[2]), 
+    (c[1],c[2],c[4]), 
+    (c[2],c[3],c[4]), 
+    (c[3],c[1],c[4]))
+    return faces
 end
 
 function init_volume(elem::Tetrahedron, nodes)
