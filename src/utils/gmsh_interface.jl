@@ -74,19 +74,7 @@ function read_gmsh(elemtype::Type{Element{dim,N,M,L}}, msh_file::String) where {
     return nodes, elements, surface
 end
 
-function getstartstop(faces::NTuple{M,NTuple{dim,NTuple{dim,Float64}}}) where M where dim
-    start, stop = zeros(Float64,dim), zeros(Float64,dim)
-    for m = 1:M
-        for k = 1:dim
-            for axis = 1:dim
-                x = faces[m][k][axis] 
-                start[axis] = min(x, start[axis])
-                stop[axis] = max(x, stop[axis])
-            end
-        end
-    end
-    return Tuple(start), Tuple(stop)
-end
+
 
 function tags_coords_to_nodes(nodeTags, nodeCoords)
     nodes = [Node(id,Vec(nodeCoords[:,i]),Vec(nodeCoords[:,i]),Vec(zeros(Float64,dim)),Vec(zeros(Float64,dim)),Vec(zeros(Float64,dim)),Vec(zeros(Float64,dim))) for id in 1:length(nodeTags)]

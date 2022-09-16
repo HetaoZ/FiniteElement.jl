@@ -12,6 +12,8 @@ end
 
 Node(dim::Int) = Node{dim}(0,tensorzeros(dim),tensorzeros(dim),tensorzeros(dim),tensorzeros(dim),tensorzeros(dim),tensorzeros(dim))
 
+Node(dim::Int,id,x0) = Node{dim}(id,x0,x0,tensorzeros(dim),tensorzeros(dim),tensorzeros(dim),tensorzeros(dim))
+
 getdim(node::Node{dim}) where dim = dim
 getdofs(node::Node{dim}) where dim = collect((node.id-1)*getdim(node)+1:node.id*getdim(node))
 

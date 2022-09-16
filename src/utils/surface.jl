@@ -233,10 +233,25 @@ end
 # -----------------------------
 # 对 surface 添加操作
 
-"将 grid 位于指定 box 空间范围内的 face 加入 surface"
-function extend_surface(grid::Grid{dim,T}, surface::Surface{M,dim}, start, stop) where {M,T,dim}
+function empty_surface(::Type{Element{dim,N,M,L}}) where {dim,N,M,L}
+    x = ()
+    u = ()
+    normals = zeros(Float64,dim,0)
+    start = ntuple(i->0.,dim)
+    stop = ntuple(i->0.,dim)
+    return Surface{0,dim}(x,u,normals,start,stop)
+end
 
-    x, u, normals, start, stop = collect(surface.x), collect(surface.u), surface.normals, surface.start, surface.stop
+"将 grid 位于指定 box 空间范围内的 face 加入 surface"
+function extend_surface(grid::Grid{dim,T}, start, stop; surface::Surface{M,dim} = empty_surface(T)) where {M,T,dim}
+
+    if M == 0
+        surface_x = NTuple{dim,NTuple{dim,Float64}}[]
+        surface_u = NTuple{dim,NTuple{dim,Float64}}[]
+    else
+        surface_x, surface_u = collect(surface.x), collect(surface.u)
+    end
+    surface_normals, surface_start, surface_stop = surface.normals, surface.start, surface.stop
 
     for elem in grid.elements
         for face in elem.faces
@@ -248,15 +263,16 @@ function extend_surface(grid::Grid{dim,T}, surface::Surface{M,dim}, start, stop)
             end
             if need_to_add
                 face_x, face_u, face_normals, face_start, face_stop = convert_for_surface(face, grid)
-                append!(x, face_x)
-                append!(u, face_u)
-                normals = hcat(normals, face_normals)
-                start, stop = ntuple(i -> min(start[i], face_start[i]), dim), ntuple(i -> max(stop[i], face_stop[i]), dim)
+                append!(surface_x, face_x)
+                append!(surface_u, face_u)
+                surface_normals = hcat(surface_normals, face_normals)
+                surface_start = ntuple(i -> min(surface_start[i], face_start[i]), dim)
+                surface_stop = ntuple(i -> max(surface_stop[i], face_stop[i]), dim)
             end
         end
     end
 
-    return Surface{length(x), dim}(Tuple(x), Tuple(u), normals, start, stop)
+    return Surface{length(surface_x), dim}(Tuple(surface_x), Tuple(surface_u), surface_normals, surface_start, surface_stop)
 end
 
 "从 element 的指定 face 提取 surface 所需数据"
@@ -293,4 +309,18 @@ function refresh!(surface::Surface{M,dim}) where {M,dim}
         surface.start = ntuple(i->min(surface.start[i],face_start[i]), dim)
         surface.stop  = ntuple(i->max(surface.stop[i],face_stop[i]), dim)
     end
+end
+
+function getstartstop(faces::NTuple{M,NTuple{dim,NTuple{dim,Float64}}}) where M where dim
+    start, stop = zeros(Float64,dim), zeros(Float64,dim)
+    for m = 1:M
+        for k = 1:dim
+            for axis = 1:dim
+                x = faces[m][k][axis] 
+                start[axis] = min(x, start[axis])
+                stop[axis] = max(x, stop[axis])
+            end
+        end
+    end
+    return Tuple(start), Tuple(stop)
 end

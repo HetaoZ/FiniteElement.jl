@@ -7,7 +7,6 @@ using LinearAlgebra
 using SparseArrays
 using Base: @propagate_inbounds
 using Printf
-using ReadGmsh
 
 export
     RectangularGrid,
@@ -33,7 +32,8 @@ export
     add_force!,
     save,
     time_step!,
-    read_gmsh
+    read_grid,
+    extend_surface
     
 
 
@@ -48,6 +48,6 @@ include("solver/solver.jl")
 include("utils/preprocess.jl")
 include("utils/postprocess.jl")
 include("utils/surface.jl")
-include("utils/gmsh_interface.jl")
+include("utils/FiniteMesh_interface.jl")
 
 end
