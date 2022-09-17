@@ -1,16 +1,16 @@
 "2结点一维线段单元"
 function Element(et::Type{Line}, connection)
-    qr, ip = QuadratureRule{1,RefCube}(2), Lagrange{1,RefCube,1}()
-    cv = CellScalarValues(qr, ip)
+    quad_rule, ip = QuadratureRule{1,RefCube}(2), Lagrange{1,RefCube,1}()
+    cv = CellScalarValues(quad_rule, ip)
     faces = infer_faces(et, connection)
-    return Line(connection, faces, cv, qr, ip)
+    return Line(connection, faces, cv, quad_rule, ip)
 end
 
 "2结点一维线段单元"
 function Element(::Type{Line}, connection, faces)
-    qr, ip = QuadratureRule{1,RefCube}(2), Lagrange{1,RefCube,1}()
-    cv = CellScalarValues(qr, ip)
-    return Line(connection, faces, cv, qr, ip)
+    quad_rule, ip = QuadratureRule{1,RefCube}(2), Lagrange{1,RefCube,1}()
+    cv = CellScalarValues(quad_rule, ip)
+    return Line(connection, faces, cv, quad_rule, ip)
 end
 
 "从connection和Element推断faces"

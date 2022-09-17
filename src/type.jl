@@ -144,7 +144,7 @@ struct Element{dim,N,M,L} <: AbstractElementType{dim,N,M,L}
     connection::NTuple{N,Int}
     faces::NTuple{M,NTuple{L,Int}}
     cv::CellScalarValues
-    qr::QuadratureRule
+    quad_rule::QuadratureRule
     ip::Interpolation
 end
 
@@ -183,6 +183,10 @@ mutable struct Grid{dim, T<:AbstractElementType} <: AbstractGrid{dim}
     prototype::AbstractGridPrototype
 end
 
+struct Plane
+    normal::Vector{Float64}
+    d::Float64
+end
 
 # ----------------------------------------------------------
 # 求解格式

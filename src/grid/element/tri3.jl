@@ -11,16 +11,16 @@ P3
 P1--P2
 """
 function Element(t::Type{Triangle}, connection)
-    qr, ip = QuadratureRule{2,RefTetrahedron}(2), Lagrange{2,RefTetrahedron,1}()
-    cv = CellScalarValues(qr, ip)
+    quad_rule, ip = QuadratureRule{2,RefTetrahedron}(2), Lagrange{2,RefTetrahedron,1}()
+    cv = CellScalarValues(quad_rule, ip)
     faces = infer_faces(t, connection)
-    return Triangle(connection, faces, cv, qr, ip)
+    return Triangle(connection, faces, cv, quad_rule, ip)
 end
 
 function Element(::Type{Triangle}, connection, faces)
-    qr, ip = QuadratureRule{2,RefTetrahedron}(2), Lagrange{2,RefTetrahedron,1}()
-    cv = CellScalarValues(qr, ip)
-    return Triangle(connection, faces, cv, qr, ip)
+    quad_rule, ip = QuadratureRule{2,RefTetrahedron}(2), Lagrange{2,RefTetrahedron,1}()
+    cv = CellScalarValues(quad_rule, ip)
+    return Triangle(connection, faces, cv, quad_rule, ip)
 end
 
 "从connection和Element推断faces"

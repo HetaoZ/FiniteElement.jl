@@ -34,9 +34,9 @@ function assemble_element!(elem::Element, nodes::Vector{Node{dim}}, material::Ab
     fill!(Me, 0.)
     
     x = collect(elem_x(elem, nodes)')
-    reinit!(elem.cv, elem.qr, x) # 更新当前的detJ和dNdx
+    reinit!(elem.cv, elem.quad_rule, x) # 更新当前的detJ和dNdx
     n = getnbasefunctions(elem.ip)
-    nq = length(elem.qr.weights)
+    nq = length(elem.quad_rule.weights)
     ndofs = dim*n
     
     for i_qpoint in 1:nq

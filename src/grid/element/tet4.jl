@@ -17,17 +17,17 @@ P1--P2
 P4
 """
 function Element(t::Type{Tetrahedron}, connection)
-    qr, ip = QuadratureRule{3,RefTetrahedron}(2), Lagrange{3,RefCube,1}()
-    cv = CellScalarValues(qr, ip)
+    quad_rule, ip = QuadratureRule{3,RefTetrahedron}(2), Lagrange{3,RefTetrahedron,1}()
+    cv = CellScalarValues(quad_rule, ip)
     faces = infer_faces(t, connection)
-    return Tetrahedron(connection, faces, cv, qr, ip)
+    return Tetrahedron(connection, faces, cv, quad_rule, ip)
 end
 
 "4结点三维四面体单元"
 function Element(::Type{Tetrahedron}, connection, faces)
-    qr, ip = QuadratureRule{3,RefTetrahedron}(2), Lagrange{3,RefCube,1}()
-    cv = CellScalarValues(qr, ip)
-    return Tetrahedron(connection, faces, cv, qr, ip)
+    quad_rule, ip = QuadratureRule{3,RefTetrahedron}(2), Lagrange{3,RefTetrahedron,1}()
+    cv = CellScalarValues(quad_rule, ip)
+    return Tetrahedron(connection, faces, cv, quad_rule, ip)
 end
 
 "从connection和Element推断faces"
@@ -45,7 +45,7 @@ function init_volume(elem::Tetrahedron, nodes)
     return tetrahedron_volume(x[:,1], x[:,2], x[:,3], x[:,4])
 end
 
-function volume(elem::Tetrahedron, nodes::Vector{Node})
+function volume(elem::Tetrahedron, nodes)
     x = elem_x(elem, nodes)
     return tetrahedron_volume(x[:,1], x[:,2], x[:,3], x[:,4])
 end

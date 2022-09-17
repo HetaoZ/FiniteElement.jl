@@ -30,7 +30,7 @@ getdim(::Grid{dim,T}) where {dim,T} = dim
 getnnodes(g::Grid) = length(g.nodes)
 getnelems(g::Grid) = length(g.elements)
 getndofs(g::Grid{dim,T}) where {dim,T} = dim * length(g.nodes)
-getnq(g::Grid) = length(g.elements[1].qr.weights)
+getnq(g::Grid) = length(g.elements[1].quad_rule.weights)
 
 
 "获取指定空间范围内包含的结点编号向量"
@@ -44,3 +44,13 @@ function find_nodes(g::Grid, start, stop)
     return nodeids
 end
 
+"对于三维空间，可根据三点确定的平面来搜寻平面附近的结点"
+function find_nodes(g::Grid{3,T}, P1, P2, P3) where T<:AbstractElementType
+    nodeids = Int[]
+    for node in g.nodes
+        if point_near_plane(node.x, P1,P2,P3)
+            push!(nodeids, node.id)
+        end
+    end
+    return nodeids
+end

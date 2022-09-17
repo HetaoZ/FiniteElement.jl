@@ -5,8 +5,8 @@ include("generate_quadrature.jl")
 import Base.Cartesian: @nloops, @nref, @ntuple, @nexprs
 
 
-getweights(qr::QuadratureRule) = qr.weights
-getpoints(qr::QuadratureRule) = qr.points
+getweights(quad_rule::QuadratureRule) = quad_rule.weights
+getpoints(quad_rule::QuadratureRule) = quad_rule.points
 
 QuadratureRule{dim,shape}(order::Int) where {dim,shape} = QuadratureRule{dim,shape}(:legendre, order)
 

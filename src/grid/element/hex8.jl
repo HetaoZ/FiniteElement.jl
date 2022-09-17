@@ -20,16 +20,16 @@ P8--P7
 P5--P6
 """
 function Element(et::Type{Hexahedron}, connection)
-    qr, ip = QuadratureRule{3,RefCube}(2), Lagrange{3,RefCube,1}()
-    cv = CellScalarValues(qr, ip)
+    quad_rule, ip = QuadratureRule{3,RefCube}(2), Lagrange{3,RefCube,1}()
+    cv = CellScalarValues(quad_rule, ip)
     faces = infer_faces(et, connection)
-    return Hexahedron(connection, faces, cv, qr, ip)
+    return Hexahedron(connection, faces, cv, quad_rule, ip)
 end
 
 function Element(::Type{Hexahedron}, connection, faces)
-    qr, ip = QuadratureRule{3,RefCube}(2), Lagrange{3,RefCube,1}()
-    cv = CellScalarValues(qr, ip)
-    return Hexahedron(connection, faces, cv, qr, ip)
+    quad_rule, ip = QuadratureRule{3,RefCube}(2), Lagrange{3,RefCube,1}()
+    cv = CellScalarValues(quad_rule, ip)
+    return Hexahedron(connection, faces, cv, quad_rule, ip)
 end
 
 "从connection和Element推断faces"

@@ -71,6 +71,11 @@ function find_nodes(s::Structure, start, stop)
     return find_nodes(s.grid, start, stop)
 end
 
+function find_nodes(s::Structure, P1, P2, P3)
+    return find_nodes(s.grid, P1, P2, P3)
+end
+
+
 # ---------------------------------------------------
 # 创建Structure实例
 

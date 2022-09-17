@@ -75,16 +75,16 @@ function CellScalarValues(quad_rule::QuadratureRule{dim,shape}, ip::Interpolatio
 end
 
 """
-    reinit!(cv::CellValues, ip::Interpolation, qr::QuadratureRule, x::Matrix)
+    reinit!(cv::CellValues, ip::Interpolation, quad_rule::QuadratureRule, x::Matrix)
 
 Update the `CellValues` object for a cell with coordinates `x`, where size(x) = (n, dim).
 The derivatives of the shape functions, and the new integration weights are computed.
 
 [@ref] 王勖成《有限单元法》P133
 """
-function reinit!(cv::CellValues{dim}, qr::QuadratureRule, x::Matrix{Float64}) where {dim}
+function reinit!(cv::CellValues{dim}, quad_rule::QuadratureRule, x::Matrix{Float64}) where {dim}
 
-    nq = length(qr.weights) # 积分点数
+    nq = length(quad_rule.weights) # 积分点数
 
     @inbounds for i_qpoint in 1:nq
         # 计算第i个积分点上的 detJ * dV
@@ -92,13 +92,13 @@ function reinit!(cv::CellValues{dim}, qr::QuadratureRule, x::Matrix{Float64}) wh
         J = cv.dNdξ[:,:,i_qpoint] * x
         detJ = det(J)
         detJ > 0.0 || throw_detJ_not_pos(detJ)
-        cv.detJdV[i_qpoint] = detJ * qr.weights[i_qpoint]
+        cv.detJdV[i_qpoint] = detJ * quad_rule.weights[i_qpoint]
 
         Jinv = inv(J)
         cv.dNdx[:,:,i_qpoint] = Jinv * cv.dNdξ[:,:,i_qpoint]
 
         # println()
-        # println("qpoint = ", qr.points[i_qpoint])
+        # println("qpoint = ", quad_rule.points[i_qpoint])
         # println("dNdξ = ")
         # display(cv.dNdξ[:,:,i_qpoint]); println()
         # println("detJ = ", det(J))

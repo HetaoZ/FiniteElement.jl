@@ -11,16 +11,16 @@ P4--P3
 P1--P2
 """
 function Element(t::Type{Quadrilateral}, connection)
-    qr, ip = QuadratureRule{2,RefCube}(2), Lagrange{2,RefCube,1}()
-    cv = CellScalarValues(qr, ip)
+    quad_rule, ip = QuadratureRule{2,RefCube}(2), Lagrange{2,RefCube,1}()
+    cv = CellScalarValues(quad_rule, ip)
     faces = infer_faces(t, connection)
-    return Quadrilateral(connection, faces, cv, qr, ip)
+    return Quadrilateral(connection, faces, cv, quad_rule, ip)
 end
 
 function Element(::Type{Quadrilateral}, connection, faces)
-    qr, ip = QuadratureRule{2,RefCube}(2), Lagrange{2,RefCube,1}()
-    cv = CellScalarValues(qr, ip)
-    return Quadrilateral(connection, faces, cv, qr, ip)
+    quad_rule, ip = QuadratureRule{2,RefCube}(2), Lagrange{2,RefCube,1}()
+    cv = CellScalarValues(quad_rule, ip)
+    return Quadrilateral(connection, faces, cv, quad_rule, ip)
 end
 
 

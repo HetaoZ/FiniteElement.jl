@@ -4,6 +4,7 @@
 
 "dim 维空间中的 dim-1 维闭合曲面，包含 M 个 face"
 struct Surface{M,dim}
+    ids::NTuple{M,NTuple{dim,Int}}
     # 存储 M 个 face 的 dim 个结点的 dim 个坐标和速度分量
     x::NTuple{M, NTuple{dim, NTuple{dim,Float64}}}
     u::NTuple{M, NTuple{dim, NTuple{dim,Float64}}}
@@ -16,16 +17,18 @@ end
 
 "为了方便单独分析一个 face"
 struct SurfaceFace{dim}
+    ids::NTuple{dim,Int}
     x::NTuple{dim, NTuple{dim,Float64}}
     u::NTuple{dim, NTuple{dim,Float64}}
+    normal::Vector{Float64}
 end
 
 "i 是 surface 上的 face 编号"
 @inline function getface(surface::Surface{M,dim}, i::Int) where M where dim
-    return SurfaceFace{dim}(surface.x[i], surface.u[i])
+    return SurfaceFace{dim}(surface.ids[i], surface.x[i], surface.u[i], surface.normals[:,i])
 end
 
-using PointInPoly
+
 
 """
 适配 pinpoly 算法
@@ -47,6 +50,7 @@ getsurface!(s::Structure, topo::SurfaceTopology) = getsurface!(s.grid, topo)
 
 function getsurface!(grid::Grid{dim,T}, topo::SurfaceTopology) where {dim,T<:Union{Line,Triangle,Quadrilateral,Tetrahedron}}
     L, M = size(topo.faces)
+    ids = [ntuple(i->grid.nodes[topo.faces[i,i_face]].id, L) for i_face in 1:M]
     x = [ntuple(i->vec2tuple(grid.nodes[topo.faces[i,i_face]].x), L) for i_face in 1:M]
     u = [ntuple(i->vec2tuple(grid.nodes[topo.faces[i,i_face]].u), L) for i_face in 1:M]
     normals = zeros(Float64,dim,size(topo.faces,2))
@@ -55,13 +59,15 @@ function getsurface!(grid::Grid{dim,T}, topo::SurfaceTopology) where {dim,T<:Uni
     end
     x = Tuple(x)
     u = Tuple(u)
+    ids = Tuple(ids)
     start, stop = getstartstop(x)
-    return Surface{M,dim}(x,u,normals,start,stop)
+    return Surface{M,dim}(ids,x,u,normals,start,stop)
 end
 
 const ZERO_TRIANGLE = ((0.,0.,0.),(0.,0.,0.),(0.,0.,0.))
 
 function getsurface!(grid::Grid{3,Hexahedron}, topo::SurfaceTopology)
+    ids = fill((0,0,0), 0)
     x = fill(ZERO_TRIANGLE, 0)
     u = fill(ZERO_TRIANGLE, 0)
     normals = zeros(Float64, 3, 0)
@@ -70,14 +76,17 @@ function getsurface!(grid::Grid{3,Hexahedron}, topo::SurfaceTopology)
 
     for face in topo.faces
         face_x, face_u, face_normals, face_start, face_stop = convert_for_surface(face, grid)
+        append!(ids, face)
         append!(x, face_x)
         append!(u, face_u)
         normals = hcat(normals, face_normals)
         start = ntuple(i->min(start[i], face_start[i]), dim)
         stop  = ntuple(i->max( stop[i],  face_stop[i]), dim)
     end
-
-    return Surface{M,dim}(x,u,normals,start,stop)
+    x = Tuple(x)
+    u = Tuple(u)
+    ids = Tuple(ids)
+    return Surface{M,dim}(ids,x,u,normals,start,stop)
 end
 
 function getquadcenter(nodes::NTuple{4,Node{3}})
@@ -239,8 +248,22 @@ function select_surface!(grid::Grid{dim,T}, start, stop) where {dim,T}
     end
 end
 
-function point_in_box(point, start, stop)
-    return betweeneq(point, start, stop)
+"将与由 (P1,P2,P3) 三点确定的平面的法向距离小于 bias 的 face 加入 surface_topology"
+function select_surface!(grid::Grid{dim,T}, P1, P2, P3; bias = 1e-6) where {dim,T}
+
+    for elem in grid.elements
+        for face in elem.faces
+            need_to_add = true
+            for node_id in face
+                if !point_near_plane(grid.nodes[node_id].x, P1, P2, P3, bias = bias)
+                    need_to_add = false
+                end
+            end
+            if need_to_add
+                grid.surface_topology.faces = hcat(grid.surface_topology.faces, reshape(collect(face), (length(face),1)))
+            end
+        end
+    end
 end
 
 "更新 surface 的 normals, start, stop 信息"
@@ -266,4 +289,31 @@ function getstartstop(faces::NTuple{M,NTuple{dim,NTuple{dim,Float64}}}) where M 
         end
     end
     return Tuple(start), Tuple(stop)
+end
+
+function point_in_box(point, start, stop)
+    return betweeneq(point, start, stop)
+end
+
+
+
+"不共线的三点确定一个面"
+function Plane(P1, P2, P3)
+    P1 = collect(P1)
+    P2 = collect(P2)
+    P3 = collect(P3)
+    e1, e2 = P2 - P1, P3 - P1
+    normal = normalize(cross(e1, e2))
+    d = dot(P1, normal)
+    return Plane(normal, d)
+end
+
+function point_near_plane(point, plane::Plane; bias = 1e-6)
+    @assert bias > 0.
+    d = dot(collect(point), plane.normal)
+    return abs(d - plane.d) < bias
+end
+
+function point_near_plane(point, P1, P2, P3; bias = 1e-6)
+    return point_near_plane(point, Plane(P1,P2,P3), bias = bias)
 end
