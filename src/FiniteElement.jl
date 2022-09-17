@@ -1,8 +1,7 @@
 module FiniteElement
 using Reexport
 
-include("/home/hetao/Projects/JuliaProj/PointInPoly.jl/src/PointInPoly.jl")
-using .PointInPoly
+using PointInPoly
 using Tensors
 using WriteVTK
 using LinearAlgebra
