@@ -22,14 +22,6 @@ elem_x0(elem::Element{dim}, nodes::Vector{Node{dim}}) where dim = fetch_data(ele
 elem_x(elem::Element{dim}, nodes::Vector{Node{dim}}) where dim = fetch_data(elem, nodes, :x)
 elem_d(elem::Element{dim}, nodes::Vector{Node{dim}}) where dim = fetch_data(elem, nodes, :d)
 
-# function getcoords(elem::Element{dim,N,M,L}, nodes::Vector{Node{dim}}) where {dim,N,M,L}
-#     x = Vector{Vec{dim,Float64}}(undef,length(elem.connection))
-#     for (i, node_id) in enumerate(elem.connection)
-#         x[i] = nodes[node_id].x
-#     end
-#     return x
-# end
-
 function getdofs(elem::Element{dim,N,M,L}) where {dim,N,M,L}
     dofs = zeros(Int,dim,N)
     for i in 1:dim, j in 1:N
