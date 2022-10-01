@@ -88,10 +88,10 @@ function core_solver!(s::Structure, dt::Real, δ::Float64, α::Float64)
 
 end
 
-time_step!(s::Structure) = time_step!(s, s.solver)
-time_step!(::Structure, ::StaticSolver) = Inf
+time_step(s::Structure) = time_step(s, s.solver)
+time_step(::Structure, ::StaticSolver) = Inf
 
-function time_step!(s::Structure, ::DynamicSolver)
+function time_step(s::Structure, ::DynamicSolver)
     minL = 1.0
     minrho = 1.0
 

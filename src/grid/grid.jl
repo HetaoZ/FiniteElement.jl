@@ -54,3 +54,79 @@ function find_nodes(g::Grid{3,T}, P1, P2, P3) where T<:AbstractElementType
     end
     return nodeids
 end
+
+"允许对 grid 进行平移、旋转、缩放"
+function transform!(grid::Grid{dim,T}; translation = (0,0,0), rotation = ((0,0,1), 0), scaling = ((0,0,0), (1,1,1))) where {dim,T}
+    translate_grid!(grid, translation)
+    rotate_grid!(grid, rotation[1], rotation[2])
+    zoom_grid!(grid, scaling[1], scaling[2])
+end
+
+function vector2vec(v)
+    return Vec(Tuple(v)...)
+end
+
+function translate_grid!(grid::Grid{dim,T}, v) where {dim,T}
+    for i in eachindex(grid.nodes)
+        grid.nodes[i].x0 = vector2vec(grid.nodes[i].x0 .+ v)
+        grid.nodes[i].x = vector2vec(grid.nodes[i].x .+ v)
+    end
+    if typeof(grid.prototype) <: RectangularGrid
+        start = start .+ v
+        stop = stop .+ v
+        grid.prototype = RectangularGrid{dim,T}(start, stop, grid.prototype.nel)
+    end
+end
+
+function quaternion(t)
+    return Quaternion(0, expand(t))
+end
+
+function expand(t)
+    v = zeros(Float64,3)
+    for i in eachindex(t)
+        v[i] = t[i]
+    end
+    return v
+end
+
+function rotate_grid!(grid::Grid{dim,T}, rotation_axis::NTuple{3,R}, rotation_angle::Real) where {dim,T,R<:Real}
+    # 四元数旋转得到角度是2φ，所以除以2
+    φ = rotation_angle * 0.5
+
+    # 旋转四元数
+    q = Quaternion(cos(φ), sin(φ) * collect(rotation_axis))
+    q_conj = conj(q)
+    # 旋转函数
+    q_rotate(x) = imag_part(q * quaternion(x) * q_conj)[1:length(x)]
+
+    for i in eachindex(grid.nodes)
+        grid.nodes[i].x0 = vector2vec(q_rotate(grid.nodes[i].x0))
+        grid.nodes[i].x = vector2vec(q_rotate(grid.nodes[i].x))
+    end
+    if typeof(grid.prototype) <: RectangularGrid
+        start = q_rotate(start)
+        stop = q_rotate(stop)
+        grid.prototype = RectangularGrid{dim,T}(start, stop, grid.prototype.nel)
+    end
+end
+
+"以 origin 为基点的缩放操作"
+function zoom_grid!(grid::Grid{dim,T}, origin, scale) where {dim,T}
+    for i in eachindex(grid.nodes)
+        grid.nodes[i].x0 = vector2vec(zoom(grid.nodes[i].x0, origin, scale))
+        grid.nodes[i].x = vector2vec(zoom(grid.nodes[i].x, origin, scale))
+        grid.nodes[i].d = vector2vec(zoom(grid.nodes[i].d, origin, scale))
+        grid.nodes[i].u = vector2vec(zoom(grid.nodes[i].u, origin, scale))
+        grid.nodes[i].a = vector2vec(zoom(grid.nodes[i].a, origin, scale))
+    end
+    if typeof(grid.prototype) <: RectangularGrid
+        start = zoom(grid.prototype.start, origin, scale)
+        stop = zoom(grid.prototype.stop, origin, scale)
+        grid.prototype = RectangularGrid{dim,T}(start, stop, grid.prototype.nel)
+    end
+end
+
+function zoom(x, origin, scale)
+    return (x .- origin) .* scale .+ origin
+end

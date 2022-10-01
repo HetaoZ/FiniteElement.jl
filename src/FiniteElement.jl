@@ -8,6 +8,7 @@ using LinearAlgebra
 using SparseArrays
 using Base: @propagate_inbounds
 using Printf
+using Quaternions
 
 export
     RectangularGrid,
@@ -32,9 +33,12 @@ export
     add_bc!,
     add_force!,
     save,
-    time_step!,
+    time_step,
     read_grid,
-    select_surface!
+    select_surface!,
+    translate_grid!,
+    rotate_grid!,
+    zoom_grid!
     
 
 

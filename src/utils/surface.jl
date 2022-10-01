@@ -278,7 +278,7 @@ function refresh!(surface::Surface{M,dim}) where {M,dim}
 end
 
 function getstartstop(faces::NTuple{M,NTuple{dim,NTuple{dim,Float64}}}) where M where dim
-    start, stop = zeros(Float64,dim), zeros(Float64,dim)
+    start, stop = fill(1e14, dim), fill(-1e14, dim)
     for m = 1:M
         for k = 1:dim
             for axis = 1:dim

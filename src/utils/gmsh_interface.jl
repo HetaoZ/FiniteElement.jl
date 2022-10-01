@@ -38,8 +38,8 @@ function read_gmsh(elemtype::Type{Element{dim,N,M,L}}, msh_file::String) where {
     reordered_nodeTags = py_nodeTags[nodeTags_order] 
     nodeTags = [k for k = 1:nnp]
 
-    println(py_nodeTags)
-    println(nodeCoords)
+    # println(py_nodeTags)
+    # println(nodeCoords)
 
     # elements -------------------
     py_elemTags, py_elemNodeTags = get_elems(msh_file, ET_NUMBER[elemtype])

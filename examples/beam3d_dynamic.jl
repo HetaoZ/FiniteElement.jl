@@ -41,7 +41,7 @@ for i in 1:10
     global t
     println("i = ", i, "  t = ", t)
 
-    Δt = time_step!(s)
+    Δt = time_step(s)
     solve!(s, Δt, t)
     t += Δt
 
