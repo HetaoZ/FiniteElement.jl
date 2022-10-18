@@ -2,8 +2,8 @@ include("../src/FiniteElement.jl")
 using .FiniteElement
 
 # define a 2D rectangular grid
-nel = (4,2)
-grid = RectangularGrid{2,Quadrilateral}((0,0), (2,1), nel)
+nel = (1,1)
+grid = RectangularGrid{2,Triangle}((0,0), (1,1), nel)
 
 # define a material
 E = 1e9
@@ -31,7 +31,7 @@ add_force!(s, node_ids, (x,t) -> (0,-1e6))
 N = 1000
 save(s, ("x0","x","d","u","a"), (:x0,:x,:d,:u,:a), "../../out/beam2d_dynamic/structure_"*string(N))
 
-# solve
+# # solve
 t = 0
 for i in 1:10
     global t

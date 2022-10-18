@@ -29,6 +29,7 @@ abstract type AbstractMaterialState{T,S} end
 mutable struct LinearElasticState{T,S} <: AbstractMaterialState{T,S}
     σ::S # stress
     temp_σ::S
+    σᵥ::T # von Mises stress
 
     ρ::T
 end

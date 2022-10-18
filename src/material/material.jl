@@ -53,6 +53,7 @@ function LinearElasticState(dim)
     return LinearElasticState(
                 zero(SymmetricTensor{2, dim}),
                 zero(SymmetricTensor{2, dim}),
+                0.0,
                 0.0)
 end
 
@@ -80,6 +81,7 @@ end
 function update_state!(state::LinearElasticState, elem::Element, nodes, material)
     state.σ = state.temp_σ
     state.ρ = elem_density(elem, nodes, material)
+    state.σᵥ = compute_von_mises(state.σ)
 end
 
 function update_state!(state::PlasticState, elem::Element, nodes, material)
@@ -163,4 +165,13 @@ function symmetrize_lower!(K)
             K[i,j] = K[j,i]
         end
     end
+end
+
+# ------------------------------------------------------------------
+# 物理场后处理
+# ------------------------------------------------------------------
+
+function compute_von_mises(σ::SymmetricTensor{2, dim}) where dim
+    s = dev(σ)
+    return sqrt(3.0/2.0 * s ⊡ s)
 end

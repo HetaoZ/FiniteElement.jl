@@ -39,6 +39,8 @@ function newton_raphson_solver!(s::Structure, nrsolver::StaticSolver)
         s.solution.Δd =  Symmetric(s.solution.K) \ s.solution.Q  # 需要检验是否符号正确
         s.solution.d += s.solution.Δd 
 
+        print("itr = ", newton_itr,"  ");display(s.solution.Q);println()
+
 
         update_states!(s)
         update_nodes!(s)
@@ -66,6 +68,14 @@ function dynamic_solver!(s::Structure, dt::Real, t::Real, dynamic_solver::Dynami
     apply_constrains!(s, t)
     core_solver!(s, dt, dynamic_solver.δ, dynamic_solver.α)
     set_disp!(s, dt, t)
+
+    # d = copy(s.solution.d)
+    # for i in eachindex(d)
+    #     if abs(d[i]) < 1e-14
+    #         d[i] = 0.
+    #     end
+    # end
+    # display([s.solution.Q d]);println()
 
     update_states!(s)
     update_nodes!(s)

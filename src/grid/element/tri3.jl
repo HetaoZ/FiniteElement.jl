@@ -32,12 +32,12 @@ function infer_faces(::Type{Triangle}, c)
     return faces
 end
 
-function init_volume(elem::Triangle, nodes::Vector{Node})
+function init_volume(elem::Triangle, nodes)
     x = elem_x0(elem, nodes)
     return polygon_area(x[1,:], x[2,:])
 end
 
-function volume(elem::Triangle, nodes::Vector{Node})
+function volume(elem::Triangle, nodes)
     x = elem_x(elem, nodes)
     return polygon_area(x[1,:], x[2,:])
 end
