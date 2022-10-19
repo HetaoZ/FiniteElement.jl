@@ -30,7 +30,7 @@ export
     solve!,
     advance!,
     find_nodes,
-    add_bc!,
+    add_velocity!,
     add_force!,
     save,
     time_step,

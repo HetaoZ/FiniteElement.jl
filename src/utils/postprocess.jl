@@ -9,7 +9,7 @@ const VTK_CELL_TYPE = Dict(
 )
 
 function save(s::Structure, filename::String) 
-    save(s, ("x0","x","d","σᵥ","σ"), (:x0,:x,:d,:σᵥ,:σ), filename)
+    save(s, ("x0","x","d","u","a","σᵥ","σ"), (:x0,:x,:d,:u,:a,:σᵥ,:σ), filename)
 end
 
 function save(s::Structure, datanames::Tuple{Vararg{String}}, fields::Tuple{Vararg{Symbol}}, filename::String) 

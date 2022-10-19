@@ -6,13 +6,13 @@ grid = read_grid("/home/hetao/Downloads/models-master-Waveguides/models-master-W
 
 
 # define a material
-E = 1e9
+E = 1e3
 ν = 0.3
-ρ₀ = 1000e3
+ρ₀ = 1
 H = E/20
-σ₀ = 1e6
-# material = LinearElasticity(3,E,ν,ρ₀)
-material = J2Plasticity(3,E,ν,σ₀,H,ρ₀)
+σ₀ = 1
+material = LinearElasticity(3,E,ν,ρ₀)
+# material = J2Plasticity(3,E,ν,σ₀,H,ρ₀)
 
 # define a solver for static analysis
 # solver = ExplicitSolver
@@ -22,19 +22,25 @@ solver = NewmarkSolver
 s = Structure(material, grid, solver)
 show(s)
 
+
+λ = 1e9 # frequency
+T = 1/λ
+
 # # add displacement boundary conditions
 node_ids = find_nodes(s, (0.254358,0.482822,0.025), (0.290958,0.461692,0.025), (0.254358,0.482822,-0.025))
 node_ids = append!(node_ids, find_nodes(s, (0.290958,-0.461692,0.025), (0.254358,-0.482822,0.025), (0.290958,-0.461692,-0.025)))
 cdofs = [1,2,3]
-add_bc!(s, node_ids, cdofs, t -> (0,0,0))
+add_velocity!(s, node_ids, cdofs, (x,t) -> (0,0,0))
+
+node_ids = find_nodes(s, (-0.545315,-0.0211309,0.025), (-0.545315,-0.0211309,-0.025), (-0.545315,0.0211309,-0.025))
+cdofs = [1,2,3]
+add_velocity!(s, node_ids, cdofs, (x,t) -> (0.001 * cos(t * 2*π/T),0,0))
 
 # # add external loads
-node_ids = find_nodes(s, (-0.545315,-0.0211309,0.025), (-0.545315,-0.0211309,-0.025), (-0.545315,0.0211309,-0.025))
-λ = 10e6 # frequency
-T = 1/λ
+
 # add_force!(s, node_ids, (x,t) ->  (1e11*sin(t/T), 0, 0) )
 # add_force!(s, node_ids, (x,t) -> t < 7*T ? (1e11*sin(t/T), 0, 0) : (0,0,0))
-add_force!(s, node_ids, (x,t) -> t < 3*T ? (1e11, 0, 0) : (0,0,0))
+# add_force!(s, node_ids, (x,t) -> t < 5*T ? (5e10, 0, 0) : (0,0,0))
 # "需要想办法添加指定坐标的点力、面力、体积力"
 
 # display(s.constrains);println()
@@ -45,7 +51,7 @@ save(s, "../../out/waveguide3d_dynamic/structure_"*string(N))
 
 # # solve
 t = 0
-for i in 1:2000
+for i in 1:1000
     global t
     global λ
     global T
@@ -55,7 +61,7 @@ for i in 1:2000
     @time solve!(s, Δt, t)
     t += Δt
 
-    if i%10 == 0
+    if i%1 == 0
         println("i = ", i, "  t = ", t, "  Δt = ",Δt)
         save(s, "../../out/waveguide3d_dynamic/structure_"*string(N+i))
     end

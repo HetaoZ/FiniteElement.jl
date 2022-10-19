@@ -255,12 +255,12 @@ node_ids: 受约束的结点编号向量
 
 constrained_dofs: 每个结点受到约束的自由度，例如 constrained_dofs = [2,3] 表示仅约束第2和第3个自由度
 
-disp_func: 结点位移 d 的受约束分量关于时间 t 的函数，例如：三维空间中，约束第2和第3个自由度为0，那么 disp_func = t -> (0,0)
+velocity_func: 结点速度 u 的受约束分量关于时间 t 的函数，例如：三维空间中，约束第2和第3个自由度为0，那么 velocity_func = t -> (0,0)
 """
-struct NodeDisplacementConstrain{dim} <: NodeConstrain{dim}
+struct NodeVelocityConstrain{dim} <: NodeConstrain{dim}
     node_ids::Vector{Int}
     constrained_dofs::Vector{Int}
-    disp_func::Function
+    velocity_func::Function
 end
 
 """

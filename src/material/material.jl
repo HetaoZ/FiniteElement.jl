@@ -87,8 +87,7 @@ end
 function update_state!(state::PlasticState, elem::Element, nodes, material)
     state.ϵᵖ = state.temp_ϵᵖ
     state.σ = state.temp_σ
-    # state.σᵥ = state.temp_σᵥ
-    state.σᵥ = compute_von_mises(state.σ)
+    state.σᵥ = state.temp_σᵥ
     state.k = state.temp_k
     state.ρ = elem_density(elem, nodes, material)
 end
@@ -172,7 +171,17 @@ end
 # 物理场后处理
 # ------------------------------------------------------------------
 
-function compute_von_mises(σ::SymmetricTensor{2, dim}) where dim
-    s = dev(σ)
-    return sqrt(3.0/2.0 * s ⊡ s)
+# function compute_von_mises(σ::SymmetricTensor{2, dim}) where dim
+#     s = dev(σ)
+#     return sqrt(3.0/2.0 * s ⊡ s)
+# end
+
+"https://zhuanlan.zhihu.com/p/111548026"
+function compute_von_mises(σ::SymmetricTensor{2, 3})
+    s = eigvals(σ)
+    return sqrt(((s[3] - s[1])^2 + (s[1] - s[2])^2 + (s[2] - s[3])^2)/2)
+end
+
+function compute_von_mises(σ::SymmetricTensor{2, 2})
+    return sqrt( (σ[1,1] + σ[2,2])^2 - 3 * (σ[1,1]*σ[2,2] - σ[1,2]^2) )
 end

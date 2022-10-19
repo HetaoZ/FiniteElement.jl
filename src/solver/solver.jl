@@ -34,7 +34,7 @@ function newton_raphson_solver!(s::Structure, nrsolver::StaticSolver)
         end
 
         doassemble!(s)
-        apply_constrains!(s, 0.)
+        apply_constrains!(s, 0., 0.)
 
         s.solution.Δd =  Symmetric(s.solution.K) \ s.solution.Q  # 需要检验是否符号正确
         s.solution.d += s.solution.Δd 
@@ -68,9 +68,9 @@ function dynamic_solver!(s::Structure, dt::Real, t::Real, dynamic_solver::Dynami
     
     
 
-    apply_constrains!(s, t)
+    apply_constrains!(s, t, dt)
     core_solver!(s, dt, dynamic_solver.δ, dynamic_solver.α)
-    set_disp!(s, dt, t)
+    # set_velocity!(s, dt, t)
 
     # d = copy(s.solution.d)
     # for i in eachindex(d)

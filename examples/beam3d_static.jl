@@ -27,7 +27,7 @@ s = Structure(material, grid, solver)
 # add displacement boundary conditions
 node_ids = find_nodes(s, (-1,-1e2,-1e2), (1e-3, 1e2, 1e2))
 cdofs = [1,2,3]
-add_bc!(s, node_ids, cdofs, t -> (0,0,0))
+add_velocity!(s, node_ids, cdofs, t -> (0,0,0))
 
 # add external loads
 node_ids = find_nodes(s, (10-1e-3, 0.5-1e-3, 1-1e-3), (1e3, 0.5+1e-3, 1+1e-3))
