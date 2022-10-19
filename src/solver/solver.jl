@@ -117,7 +117,7 @@ function core_solver!(s::Structure, dt::Real, δ::Float64, α::Float64)
     a = s.solution.a
     d_minus_dt = d - dt * u + dt^2/2*a
 
-    Q_eff_bar = Q + (0.5-2*α+δ)*Q_minus_dt + (0.5-α-δ)*Q_minus_2dt
+    Q_eff_bar = α*Q + (0.5-2*α+δ)*Q_minus_dt + (0.5-α-δ)*Q_minus_2dt
     Q_eff = Q_eff_bar * dt^2 + (2*M - (0.5-2*α+δ)*dt^2*K) * d + (-M-(0.5+α-δ)*dt^2*K)*d_minus_dt 
 
     K_eff = M + α*dt^2*K
