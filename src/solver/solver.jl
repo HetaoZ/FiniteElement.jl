@@ -70,7 +70,7 @@ function dynamic_solver!(s::Structure, dt::Real, t::Real, dynamic_solver::Dynami
 
     apply_constrains!(s, t, dt)
     core_solver!(s, dt, dynamic_solver.δ, dynamic_solver.α)
-    # set_velocity!(s, dt, t)
+    # set_disp!(s, dt, t)
 
     # d = copy(s.solution.d)
     # for i in eachindex(d)
@@ -85,20 +85,50 @@ function dynamic_solver!(s::Structure, dt::Real, t::Real, dynamic_solver::Dynami
 end
 
 
-"需要在solution里添加质量矩阵M。先组装好solution再传入core_solver。"
+# "两步法。需要在solution里添加质量矩阵M。先组装好solution再传入core_solver。"
+# function core_solver!(s::Structure, dt::Real, δ::Float64, α::Float64)
+
+#     u_bk = copy(s.solution.u)
+#     a_bk = copy(s.solution.a)
+
+#     K_eff = s.solution.M + α*dt^2 * s.solution.K
+#     Q_eff = s.solution.Q - s.solution.K * (s.solution.d + dt * s.solution.u + (0.5-α)*dt^2 * s.solution.a)
+    
+#     s.solution.a = K_eff \ Q_eff
+#     s.solution.u = u_bk + ((1-δ)*a_bk + δ * s.solution.a) * dt
+#     s.solution.Δd = u_bk*dt + ((0.5-α)*a_bk + α * s.solution.a)*dt^2
+#     s.solution.d += s.solution.Δd  
+# end
+
+"三步法，以位移为变量，可以施加位移边界条件。需要在solution里添加质量矩阵M。先组装好solution再传入core_solver。"
 function core_solver!(s::Structure, dt::Real, δ::Float64, α::Float64)
 
+    d_bk = copy(s.solution.d)
     u_bk = copy(s.solution.u)
     a_bk = copy(s.solution.a)
 
-    K_eff = s.solution.M + α*dt^2 * s.solution.K
-    Q_eff = s.solution.Q - s.solution.K * (s.solution.d + dt * s.solution.u + (0.5-α)*dt^2 * s.solution.a)
-    
-    s.solution.a = K_eff \ Q_eff
-    s.solution.u = u_bk + ((1-δ)*a_bk + δ * s.solution.a) * dt
-    s.solution.Δd = u_bk*dt + ((0.5-α)*a_bk + α * s.solution.a)*dt^2
-    s.solution.d += s.solution.Δd  
+    Q = s.solution.Q
+    Q_minus_dt = s.solution.Q_minus_dt
+    Q_minus_2dt = s.solution.Q_minus_2dt
+    M = s.solution.M
+    K = s.solution.K
+    d = s.solution.d
+    u = s.solution.u
+    a = s.solution.a
+    d_minus_dt = d - dt * u + dt^2/2*a
 
+    Q_eff_bar = Q + (0.5-2*α+δ)*Q_minus_dt + (0.5-α-δ)*Q_minus_2dt
+    Q_eff = Q_eff_bar * dt^2 + (2*M - (0.5-2*α+δ)*dt^2*K) * d + (-M-(0.5+α-δ)*dt^2*K)*d_minus_dt 
+
+    K_eff = M + α*dt^2*K
+
+    s.solution.d = K_eff \ Q_eff
+    s.solution.a = 1/(α*dt^2) * (s.solution.d - d_bk) - 1/(α*dt)*u_bk - (1/(2*α) - 1)*a_bk
+    s.solution.u = u_bk + dt*(1-δ)*a_bk + δ*dt*s.solution.a
+    s.solution.Δd = s.solution.d - d_bk
+
+    s.solution.Q_minus_2dt = copy(s.solution.Q_minus_dt)
+    s.solution.Q_minus_dt = copy(s.solution.Q)
 end
 
 time_step(s::Structure) = time_step(s, s.solver)

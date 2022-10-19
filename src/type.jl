@@ -219,14 +219,13 @@ mutable struct TotalLagragianSolution <: AbstractSolution
     u::Vector{Float64}
     a::Vector{Float64}
 
-    # mises_values::Vector{Float64}
-    # κ_values::Vector{Float64}
-
     K::SparseMatrixCSC
     M::SparseMatrixCSC
     # C::SparseMatrixCSC  # damping matrix 阻尼矩阵
 
     Q::Vector{Float64}
+    Q_minus_dt::Vector{Float64}
+    Q_minus_2dt::Vector{Float64}
 end
 
 """
@@ -255,12 +254,12 @@ node_ids: 受约束的结点编号向量
 
 constrained_dofs: 每个结点受到约束的自由度，例如 constrained_dofs = [2,3] 表示仅约束第2和第3个自由度
 
-velocity_func: 结点速度 u 的受约束分量关于时间 t 的函数，例如：三维空间中，约束第2和第3个自由度为0，那么 velocity_func = t -> (0,0)
+disp_func: 结点速度 u 的受约束分量关于时间 t 的函数，例如：三维空间中，约束第2和第3个自由度为0，那么 disp_func = t -> (0,0)
 """
-struct NodeVelocityConstrain{dim} <: NodeConstrain{dim}
+struct NodeDispConstrain{dim} <: NodeConstrain{dim}
     node_ids::Vector{Int}
     constrained_dofs::Vector{Int}
-    velocity_func::Function
+    disp_func::Function
 end
 
 """

@@ -8,10 +8,10 @@ end
 # 位移边界
 
 function clear_bcs!(s::Structure)
-    filter!(c->typeof(c) ∉ (NodeVelocityConstrain,), s.constrains)
+    filter!(c->typeof(c) ∉ (NodeDispConstrain,), s.constrains)
 end
 
-function add_velocity!(s::Structure, bc::NodeVelocityConstrain; clear::Bool = false)
+function add_disp!(s::Structure, bc::NodeDispConstrain; clear::Bool = false)
     if clear 
         clear_bcs!(s)
     end
@@ -23,14 +23,14 @@ node_ids: 受约束的结点编号向量
 
 constrained_dofs: 每个结点受到约束的自由度，例如 constrained_dofs = [2,3] 表示仅约束第2和第3个自由度
 
-velocity_func: 结点速度 u 的受约束分量关于时间 t 的函数，返回一个长度与约束自由度数一致的元组，例如：三维空间中，约束第2和第3个自由度为0，那么 velocity_func = t -> (0,0)
+disp_func: 结点速度 u 的受约束分量关于时间 t 的函数，返回一个长度与约束自由度数一致的元组，例如：三维空间中，约束第2和第3个自由度为0，那么 disp_func = t -> (0,0)
 """
-function add_velocity!(s::Structure{dim}, node_ids::Vector{Int}, constrained_dofs::Vector{Int},
-    velocity_func::Function; clear::Bool = false) where dim
+function add_disp!(s::Structure{dim}, node_ids::Vector{Int}, constrained_dofs::Vector{Int},
+    disp_func::Function; clear::Bool = false) where dim
 
-    @assert length(velocity_func(0,0)) == length(constrained_dofs) && length(constrained_dofs) <= dim
+    @assert length(disp_func(0,0)) == length(constrained_dofs) && length(constrained_dofs) <= dim
 
-    add_velocity!(s, NodeVelocityConstrain{dim}(node_ids, constrained_dofs, velocity_func), clear=clear)
+    add_disp!(s, NodeDispConstrain{dim}(node_ids, constrained_dofs, disp_func), clear=clear)
 end
 
 # ----------------------------------------------
@@ -81,11 +81,11 @@ end
 """
 施加位移约束
 """
-function apply_constrain!(sol::TotalLagragianSolution, constrain::NodeVelocityConstrain{dim}, nodes::Vector{Node{dim}}, t, Δt) where dim
+function apply_constrain!(sol::TotalLagragianSolution, constrain::NodeDispConstrain{dim}, nodes::Vector{Node{dim}}, t, Δt) where dim
 
     for node_id in constrain.node_ids
         x = nodes[node_id].x
-        a = (constrain.velocity_func(x,t+Δt) .- constrain.velocity_func(x,t)) ./ Δt
+        d = constrain.disp_func(x,t+Δt)
 
         for (i, elem_dof) in enumerate(constrain.constrained_dofs)
 
@@ -93,15 +93,15 @@ function apply_constrain!(sol::TotalLagragianSolution, constrain::NodeVelocityCo
 
             sol.K[global_dof,global_dof] *= CONSTRAIN_ALPHA
             sol.M[global_dof,global_dof] *= CONSTRAIN_ALPHA
-            sol.Q[global_dof] = sol.K[global_dof,global_dof] * a[i]
+            sol.Q[global_dof] = sol.K[global_dof,global_dof] * d[i]
         end
     end
 end
 
-function set_velocity!(nodes, sol::TotalLagragianSolution, constrain::NodeVelocityConstrain{dim}, dt, t) where dim
+function set_disp!(nodes, sol::TotalLagragianSolution, constrain::NodeDispConstrain{dim}, dt, t) where dim
     for node_id in constrain.node_ids
         x = nodes[node_id].x
-        new_u = constrain.velocity_func(x,t)
+        new_u = constrain.disp_func(x,t)
 
         for (i, elem_dof) in enumerate(constrain.constrained_dofs)
             global_dof = Int(dim * (node_id - 1) + elem_dof)
@@ -109,20 +109,20 @@ function set_velocity!(nodes, sol::TotalLagragianSolution, constrain::NodeVeloci
             old_d = sol.d[global_dof]
             old_u = sol.u[global_dof]
             
-            new_u = (new_d[i] - old_d) / dt
-            new_a = (new_u - old_u) / dt
+            new_d = old_d + new_u[i] * dt
+            new_a = (new_u[i] - old_u) / dt
             
             sol.a[global_dof] = new_a
-            sol.u[global_dof] = new_u
-            sol.d[global_dof] = new_d[i]
+            sol.u[global_dof] = new_u[i]
+            sol.d[global_dof] = new_d
         end
     end
 end
 
-function set_velocity!(s::Structure{dim}, dt, t) where dim
+function set_disp!(s::Structure{dim}, dt, t) where dim
     for c in s.constrains
-        if typeof(c) == NodeVelocityConstrain{dim}
-            set_velocity!(s.grid.nodes, s.solution, c, dt, t)
+        if typeof(c) == NodeDispConstrain{dim}
+            set_disp!(s.grid.nodes, s.solution, c, dt, t)
         end
     end
 end
@@ -130,7 +130,7 @@ end
 """
 施加力约束
 """
-function apply_constrain!(sol::TotalLagragianSolution, constrain::NodeForceConstrain{dim}, nodes::Vector{Node{dim}}, t) where dim 
+function apply_constrain!(sol::TotalLagragianSolution, constrain::NodeForceConstrain{dim}, nodes::Vector{Node{dim}}, t, dt) where dim 
 
     for node_id in constrain.node_ids
 
