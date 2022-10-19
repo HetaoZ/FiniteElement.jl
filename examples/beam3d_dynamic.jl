@@ -43,7 +43,7 @@ add_force!(s, node_ids, (x,t) -> (0,0,-1e9))
 
 # save data
 N = 1000000
-save(s, ("x0","x","d","u","a"), (:x0,:x,:d,:u,:a), "../../out/beam3d_dynamic/structure_"*string(N))
+save(s, "../../out/beam3d_dynamic/structure_"*string(N))
 
 # solve
 t = 0
@@ -56,7 +56,7 @@ for i in 1:1000
 
     if i%20 == 0
         println("i = ", i, "  t = ", t)
-        save(s, ("x0","x","d","u","a"), (:x0,:x,:d,:u,:a), "../../out/beam3d_dynamic/structure_"*string(N+i))
+        save(s, "../../out/beam3d_dynamic/structure_"*string(N+i))
     end
     
 end

@@ -71,9 +71,9 @@ function PlasticState(dim)
 end
 
 function update_states!(s::Structure)
-    for (elem_id, cell_states) in enumerate(s.states)
-        for state in cell_states
-            update_state!(state, s.grid.elements[elem_id], s.grid.nodes, s.material)
+    for elem_id in eachindex(s.states)
+        for i in eachindex(s.states[elem_id])
+            update_state!(s.states[elem_id][i], s.grid.elements[elem_id], s.grid.nodes, s.material)
         end
     end
 end
@@ -87,7 +87,8 @@ end
 function update_state!(state::PlasticState, elem::Element, nodes, material)
     state.ϵᵖ = state.temp_ϵᵖ
     state.σ = state.temp_σ
-    state.σᵥ = state.temp_σᵥ
+    # state.σᵥ = state.temp_σᵥ
+    state.σᵥ = compute_von_mises(state.σ)
     state.k = state.temp_k
     state.ρ = elem_density(elem, nodes, material)
 end
@@ -97,20 +98,20 @@ n = number of elements
 nq = number of quadrature points per element
 """
 function new_states(::LinearElasticity{dim,T,S}, n::Int, nq::Int) where {dim,T,S}
-    return fill(fill(LinearElasticState(dim), nq), n)
+    return [[LinearElasticState(dim) for i = 1:nq] for j in 1:n]
 end
 
 function new_states(::J2Plasticity{dim,T,S}, n::Int, nq::Int) where {dim,T,S}
-    return fill(fill(PlasticState(dim), nq), n)
+    return [[PlasticState(dim) for i = 1:nq] for j in 1:n]
 end
 
-function compute_stress_tangent(ϵ::SymmetricTensor, material::LinearElasticity, state::LinearElasticState)
+function compute_stress_tangent!(ϵ::SymmetricTensor, material::LinearElasticity, state::LinearElasticState)
     # elastic loading
     state.temp_σ = material.Dᵉ ⊡ ϵ
     return state.temp_σ, material.Dᵉ
 end
 
-function compute_stress_tangent(ϵ::SymmetricTensor, material::J2Plasticity, state::PlasticState)
+function compute_stress_tangent!(ϵ::SymmetricTensor, material::J2Plasticity, state::PlasticState)
     # unpack some material parameters
     G = material.G
     K = material.K

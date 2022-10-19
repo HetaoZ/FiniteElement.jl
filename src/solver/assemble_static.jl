@@ -9,16 +9,10 @@ function assemble_solution!(solution::TotalLagragianSolution, grid::Grid{dim}, m
     Qe = zeros(Float64, ndofs)
     clear_solution!(solution, solver)
 
-    # println("assemble-1:  Q = ", solution.Q[end])
-
-
-    for (elem, elem_states) in zip(grid.elements, states)
-        de = solution.d[getdofs(elem)]
-        assemble_element!(elem, grid.nodes, material, de, elem_states, Ke, Qe)
-        assemble_global!(solution, elem, Ke, Qe)
-
-        # println("assemble-2:  Q = ", solution.Q[end])
-
+    for i in eachindex(states)
+        de = solution.d[getdofs(grid.elements[i])]
+        assemble_element(grid.elements[i], grid.nodes, material, de, states[i], Ke, Qe)
+        assemble_global!(solution, grid.elements[i], Ke, Qe)
     end
 
 end
@@ -33,7 +27,7 @@ load 应该在组装完总体 Q 之后添加到 Q 上，而不是逐个单元加
 
 输入参数 Ke, Qe 是为了避免重复分配内存。
 """
-function assemble_element!(elem::Element, nodes::Vector{Node{dim}}, material::AbstractMaterial, de::Vector{Float64}, states::Vector{AbstractMaterialState}, Ke::Matrix{Float64}, Qe::Vector{Float64}) where dim
+function assemble_element(elem::Element, nodes::Vector{Node{dim}}, material::AbstractMaterial, de::Vector{Float64}, elem_states::Vector{AbstractMaterialState}, Ke::Matrix{Float64}, Qe::Vector{Float64}) where dim
 
     fill!(Ke, 0.)
     fill!(Qe, 0.)
@@ -45,7 +39,7 @@ function assemble_element!(elem::Element, nodes::Vector{Node{dim}}, material::Ab
 
     for i_qpoint in 1:nq
         ε = compute_strain(elem.cv, i_qpoint, de)
-        σ, D = compute_stress_tangent(ε, material, states[i_qpoint]) # size(D) = (dim,dim,dim,dim)
+        compute_stress_tangent!(ε, material, elem_states[i_qpoint]) # size(D) = (dim,dim,dim,dim)
         dΩ = getdetJdV(elem.cv, i_qpoint)
 
         ∇N = shape_gradient(elem.cv, i_qpoint) # size(∇N) = (dim,n)
@@ -59,11 +53,7 @@ function assemble_element!(elem::Element, nodes::Vector{Node{dim}}, material::Ab
                 Ke[i,j] += Bᵀ_i  ⊡ D ⊡ B_j * dΩ
             end
         end
-    end
-
-    # Qe 表示体积力和面力对结点载荷的贡献，此处记为 0， 不做计算，在最终的 Q 上一次性添加外载荷 load
-    
-    return Ke, Qe
+    end 
 end
 
 function assemble_global!(sol::TotalLagragianSolution, elem::Element, Ke, Qe)

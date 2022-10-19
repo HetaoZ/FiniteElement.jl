@@ -65,6 +65,9 @@ end
 function dynamic_solver!(s::Structure, dt::Real, t::Real, dynamic_solver::DynamicSolver)
     
     doassemble!(s)
+    
+    
+
     apply_constrains!(s, t)
     core_solver!(s, dt, dynamic_solver.δ, dynamic_solver.α)
     set_disp!(s, dt, t)
@@ -76,7 +79,7 @@ function dynamic_solver!(s::Structure, dt::Real, t::Real, dynamic_solver::Dynami
     #     end
     # end
     # display([s.solution.Q d]);println()
-
+    
     update_states!(s)
     update_nodes!(s)
 end

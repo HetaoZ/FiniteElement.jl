@@ -38,7 +38,8 @@ export
     select_surface!,
     translate_grid!,
     rotate_grid!,
-    zoom_grid!
+    zoom_grid!,
+    show
     
 
 

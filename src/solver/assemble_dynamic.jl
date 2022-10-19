@@ -1,5 +1,5 @@
 "Assembler for dynamic solvers"
-function assemble_solution!(solution::TotalLagragianSolution, grid::Grid{dim}, material::AbstractMaterial, states::Vector{Vector{AbstractMaterialState}}, solver::DynamicSolver) where dim
+function assemble_solution!(solution::TotalLagragianSolution, grid::Grid{dim}, material::AbstractMaterial, states, solver::DynamicSolver) where dim
     n_basefuncs = getnbasefunctions(grid.elements[1].ip)
     ndofs = n_basefuncs * dim
     Ke = zeros(Float64, ndofs, ndofs)
@@ -7,10 +7,10 @@ function assemble_solution!(solution::TotalLagragianSolution, grid::Grid{dim}, m
     Me = zeros(Float64, ndofs, ndofs)
     clear_solution!(solution, solver)
 
-    for (elem, elem_states) in zip(grid.elements, states)
-        de = solution.d[getdofs(elem)]
-        assemble_element!(elem, grid.nodes, material, de, elem_states, Ke, Qe, Me)
-        assemble_global!(solution, elem, Ke, Qe, Me)
+    for i in eachindex(states)
+        de = solution.d[getdofs(grid.elements[i])]
+        assemble_element!(grid.elements[i], grid.nodes, material, de, states[i], Ke, Qe, Me)
+        assemble_global!(solution, grid.elements[i], Ke, Qe, Me)
     end
 end
 
@@ -27,7 +27,7 @@ load 应该在组装完总体 Q 之后添加到 Q 上，而不是逐个单元加
 
 输入参数 Ke, Qe, Me 是为了避免重复分配内存。
 """
-function assemble_element!(elem::Element, nodes::Vector{Node{dim}}, material::AbstractMaterial, de::Vector{Float64}, states::Vector{AbstractMaterialState}, Ke::Matrix{Float64}, Qe::Vector{Float64}, Me::Matrix{Float64}) where dim
+function assemble_element!(elem::Element{dim,N,M,L}, nodes, material, de, states, Ke, Qe, Me) where {dim,N,M,L}
 
     fill!(Ke, 0.)
     fill!(Qe, 0.)
@@ -38,10 +38,10 @@ function assemble_element!(elem::Element, nodes::Vector{Node{dim}}, material::Ab
     n = getnbasefunctions(elem.ip)
     nq = length(elem.quad_rule.weights)
     ndofs = dim*n
-    
+
     for i_qpoint in 1:nq
         ε = compute_strain(elem.cv, i_qpoint, de)
-        σ, D = compute_stress_tangent(ε, material, states[i_qpoint]) # size(D) = (dim,dim,dim,dim)
+        σ, D = compute_stress_tangent!(ε, material, states[i_qpoint]) # size(D) = (dim,dim,dim,dim)
         dΩ = getdetJdV(elem.cv, i_qpoint)
         ρₑ = states[i_qpoint].ρ
 
@@ -60,8 +60,6 @@ function assemble_element!(elem::Element, nodes::Vector{Node{dim}}, material::Ab
             end
         end
     end
-
-    return Ke, Qe, Me
 end
 
 function assemble_global!(sol::TotalLagragianSolution, elem::Element, Ke, Qe, Me)

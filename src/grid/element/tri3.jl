@@ -11,7 +11,7 @@ P3
 P1--P2
 """
 function Element(t::Type{Triangle}, connection)
-    quad_rule, ip = QuadratureRule{2,RefTetrahedron}(2), Lagrange{2,RefTetrahedron,1}()
+    quad_rule, ip = QuadratureRule{2,RefTetrahedron}(1), Lagrange{2,RefTetrahedron,1}()
     cv = CellScalarValues(quad_rule, ip)
     faces = infer_faces(t, connection)
     return Triangle(connection, faces, cv, quad_rule, ip)

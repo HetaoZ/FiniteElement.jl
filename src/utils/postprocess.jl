@@ -8,10 +8,20 @@ const VTK_CELL_TYPE = Dict(
     Hexahedron=>VTKCellTypes.VTK_HEXAHEDRON
 )
 
+function save(s::Structure, filename::String) 
+    save(s, ("x0","x","d","σᵥ","σ"), (:x0,:x,:d,:σᵥ,:σ), filename)
+end
+
 function save(s::Structure, datanames::Tuple{Vararg{String}}, fields::Tuple{Vararg{Symbol}}, filename::String) 
     vtkfile = create_vtkfile(s.grid, filename)
     for i in eachindex(datanames)
-        vtkfile[datanames[i]] = fetch_data(s, fields[i])
+        if fields[i] == :σ
+            vtkfile[datanames[i]] = fetch_σ_data(s)
+        elseif fields[i] == :σᵥ
+            vtkfile[datanames[i]] = fetch_σᵥ_data(s)
+        else
+            vtkfile[datanames[i]] = fetch_data(s, fields[i])
+        end
     end
     outfiles = vtk_save(vtkfile)
     # println("       saved to ",outfiles[1])
@@ -51,3 +61,59 @@ function fetch_data(s::Structure{dim}, field) where dim
     end
     return d    
 end
+
+"""
+Fetch data from cells (converted to node data).
+"""
+function fetch_σ_data(s::Structure{dim}) where dim
+    d = zeros(Float64, dim, getnnodes(s.grid))
+    cell_count = zeros(Int, getnnodes(s.grid))
+    # if typeof(s.grid.elements[1]) <: SimplexElement
+        for (elem_id, elem) in enumerate(s.grid.elements)
+            for i in eachindex(elem.connection)
+                node_id = elem.connection[i]
+                cell_count[node_id] += 1
+                for axis in 1:dim
+                    d[axis, node_id] += mean([state.σ[axis,axis] for state in s.states[elem_id]])
+                end
+            end
+        end
+        for axis in 1:dim
+            d[axis, :] = d[axis,:] ./ cell_count
+        end
+
+    # else
+    #     error("undef elemtype")
+    # end
+    return d    
+end
+
+"""
+Fetch data from cells (converted to node data).
+"""
+function fetch_σᵥ_data(s::Structure{dim}) where dim
+    d = zeros(Float64, getnnodes(s.grid))
+    cell_count = zeros(Int, getnnodes(s.grid))
+    # if typeof(s.grid.elements[1]) <: SimplexElement
+        for (elem_id, elem) in enumerate(s.grid.elements)
+            for i in eachindex(elem.connection)
+                node_id = elem.connection[i]
+                cell_count[node_id] += 1
+                d[node_id] += mean([state.σᵥ for state in s.states[elem_id]])
+            end
+        end
+        d = reshape(d ./ cell_count, (1,getnnodes(s.grid)))
+    # else
+    #     error("undef elemtype")
+    # end
+    return d    
+end
+
+
+import Base.show
+
+function show(s::Structure{dim}) where {dim} 
+    println(dim,"-D Structure")
+    println("--  ", length(s.grid.elements) , " elements of type ", eltype(s.grid.elements))
+end
+
