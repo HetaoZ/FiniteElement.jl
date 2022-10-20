@@ -35,7 +35,7 @@ add_disp!(s, node_ids, cdofs, (x,t) -> (0,0,0))
 # add external loads
 node_ids = find_nodes(s, (5-1e-3, 0.0-1e-3, 1-1e-3), (5+1e-3, 1.0+1e-3, 1+1e-3))
 # add_force!(s, node_ids, (x,t) -> t < 100e-6 ? (1e7,0,0) : (0,0,0))
-add_force!(s, node_ids, (x,t) -> (0,0,-1))
+add_force!(s, node_ids, (x,t) -> (0,0,-1e9))
 "需要想办法添加指定坐标的点力、面力、体积力"
 
 # display(s.constrains);println()
@@ -47,16 +47,16 @@ save(s, "../../out/beam3d_dynamic/structure_"*string(N))
 
 # solve
 t = 0
-for i in 1:1000
+for i in 1:4
     global t
 
     Δt = time_step(s)
     solve!(s, Δt, t)
     t += Δt
 
-    if i%1 == 0
-        println("i = ", i, "  t = ", t)
-        save(s, "../../out/beam3d_dynamic/structure_"*string(N+i))
-    end
+    # if i%1 == 0
+    #     # println("i = ", i, "  t = ", t)
+    #     save(s, "../../out/beam3d_dynamic/structure_"*string(N+i))
+    # end
     
 end

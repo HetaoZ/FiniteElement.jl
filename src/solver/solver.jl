@@ -69,7 +69,8 @@ function dynamic_solver!(s::Structure, dt::Real, t::Real, dynamic_solver::Dynami
     
 
     apply_constrains!(s, t, dt)
-    core_solver!(s, dt, dynamic_solver.δ, dynamic_solver.α)
+    core_solver3!(s, t, dt, dynamic_solver.δ, dynamic_solver.α)
+    core_solver!(s, t, dt, dynamic_solver.δ, dynamic_solver.α)
     # set_disp!(s, dt, t)
 
     # d = copy(s.solution.d)
@@ -86,30 +87,44 @@ end
 
 
 # "两步法。需要在solution里添加质量矩阵M。先组装好solution再传入core_solver。"
-# function core_solver!(s::Structure, dt::Real, δ::Float64, α::Float64)
+function core_solver!(s::Structure, t, dt::Real, δ::Float64, α::Float64)
+    println("-- 2-step solver--")
 
-#     u_bk = copy(s.solution.u)
-#     a_bk = copy(s.solution.a)
+    u_bk = copy(s.solution.u)
+    a_bk = copy(s.solution.a)
 
-#     K_eff = s.solution.M + α*dt^2 * s.solution.K
-#     Q_eff = s.solution.Q - s.solution.K * (s.solution.d + dt * s.solution.u + (0.5-α)*dt^2 * s.solution.a)
+    K_eff = s.solution.M + α*dt^2 * s.solution.K
+    Q_eff = s.solution.Q - s.solution.K * (s.solution.d + dt * s.solution.u + (0.5-α)*dt^2 * s.solution.a)
     
-#     s.solution.a = K_eff \ Q_eff
-#     s.solution.u = u_bk + ((1-δ)*a_bk + δ * s.solution.a) * dt
-#     s.solution.Δd = u_bk*dt + ((0.5-α)*a_bk + α * s.solution.a)*dt^2
-#     s.solution.d += s.solution.Δd  
-# end
+    s.solution.a = K_eff \ Q_eff
+    s.solution.u = u_bk + ((1-δ)*a_bk + δ * s.solution.a) * dt
+    s.solution.Δd = u_bk*dt + ((0.5-α)*a_bk + α * s.solution.a)*dt^2
+    s.solution.d += s.solution.Δd 
+    
+    dof = 28*3
+    println("sol_d = ",  s.solution.d[dof])
+    println("sol_u = ",  s.solution.u[dof])
+    println("sol_a = ",  s.solution.a[dof])
+    # println("sol_Δd = ", s.solution.Δd[dof])
+end
 
 "三步法，以位移为变量，可以施加位移边界条件。需要在solution里添加质量矩阵M。先组装好solution再传入core_solver。"
-function core_solver!(s::Structure, dt::Real, δ::Float64, α::Float64)
+function core_solver3!(s::Structure, t, dt::Real, δ::Float64, α::Float64)
+    println()
+    println("-- 3-step solver--")
 
     d_bk = copy(s.solution.d)
     u_bk = copy(s.solution.u)
     a_bk = copy(s.solution.a)
 
     Q = s.solution.Q
-    Q_minus_dt = s.solution.Q_minus_dt
-    Q_minus_2dt = s.solution.Q_minus_2dt
+    # if t == 0.
+    #     Q_minus_dt = Q
+    #     Q_minus_2dt = Q
+    # else
+        Q_minus_dt = s.solution.Q_minus_dt
+        Q_minus_2dt = s.solution.Q_minus_2dt
+    # end
     M = s.solution.M
     K = s.solution.K
     d = s.solution.d
@@ -117,18 +132,25 @@ function core_solver!(s::Structure, dt::Real, δ::Float64, α::Float64)
     a = s.solution.a
     d_minus_dt = d - dt * u + dt^2/2*a
 
-    Q_eff_bar = α*Q + (0.5-2*α+δ)*Q_minus_dt + (0.5-α-δ)*Q_minus_2dt
+    # Q_eff_bar = α*Q + (0.5-2*α+δ)*Q_minus_dt + (0.5-α-δ)*Q_minus_2dt
+    Q_eff_bar = α*Q
     Q_eff = Q_eff_bar * dt^2 + (2*M - (0.5-2*α+δ)*dt^2*K) * d + (-M-(0.5+α-δ)*dt^2*K)*d_minus_dt 
 
     K_eff = M + α*dt^2*K
 
-    s.solution.d = K_eff \ Q_eff
-    s.solution.a = 1/(α*dt^2) * (s.solution.d - d_bk) - 1/(α*dt)*u_bk - (1/(2*α) - 1)*a_bk
-    s.solution.u = u_bk + dt*(1-δ)*a_bk + δ*dt*s.solution.a
-    s.solution.Δd = s.solution.d - d_bk
+    sol_d = K_eff \ Q_eff
+    sol_a = 1/(α*dt^2) * (sol_d - d_bk) - 1/(α*dt)*u_bk - (1/(2*α) - 1)*a_bk
+    sol_u = u_bk + dt*(1-δ)*a_bk + δ*dt*sol_a
+    sol_Δd = sol_d - d_bk
 
     s.solution.Q_minus_2dt = copy(s.solution.Q_minus_dt)
-    s.solution.Q_minus_dt = copy(s.solution.Q)
+    s.solution.Q_minus_dt  = copy(s.solution.Q)
+
+    dof = 28*3
+    println("sol_d = ", sol_d[dof])
+    println("sol_u = ", sol_u[dof])
+    println("sol_a = ", sol_a[dof])
+    # println("sol_Δd = ", sol_Δd[dof])
 end
 
 time_step(s::Structure) = time_step(s, s.solver)
