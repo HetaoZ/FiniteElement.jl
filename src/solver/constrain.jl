@@ -87,13 +87,17 @@ function apply_constrain!(sol::TotalLagragianSolution, constrain::NodeDispConstr
         x = nodes[node_id].x
         d = constrain.disp_func(x,t+Δt)
 
-        for (i, elem_dof) in enumerate(constrain.constrained_dofs)
+        for constrained_dof in constrain.constrained_dofs
 
-            global_dof = Int(dim * (node_id - 1) + elem_dof)
+            global_dof = Int(dim * (node_id - 1) + constrained_dof)
 
             sol.K[global_dof,global_dof] *= CONSTRAIN_ALPHA
-            sol.M[global_dof,global_dof] *= CONSTRAIN_ALPHA
-            sol.Q[global_dof] = sol.K[global_dof,global_dof] * d[i]
+            # 根据动力学平衡方程，应该削减质量为 0，才能保证 K * d = Q
+            for j in axes(sol.M, 2)
+                sol.M[global_dof,j] = 0.
+            end
+            sol.Q[global_dof] = sol.K[global_dof,global_dof] * d[constrained_dof]
+
         end
     end
 end

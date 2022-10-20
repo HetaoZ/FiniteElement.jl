@@ -34,8 +34,8 @@ add_disp!(s, node_ids, cdofs, (x,t) -> (0,0,0))
 
 node_ids = find_nodes(s, (-0.545315,-0.0211309,0.025), (-0.545315,-0.0211309,-0.025), (-0.545315,0.0211309,-0.025))
 cdofs = [1,2,3]
-# add_disp!(s, node_ids, cdofs, (x,t) -> (1e-6 *2*π/T *cos(t * 2*π/T),0,0))
-add_disp!(s, node_ids, cdofs, (x,t) -> (1e-3*sin(t/T*2π),0,0))
+
+add_disp!(s, node_ids, cdofs, (x,t) -> (5e-2*sin(t/T*2π),0,0))
 
 # # add external loads
 
@@ -52,14 +52,14 @@ save(s, "../../out/waveguide3d_dynamic/structure_"*string(N))
 
 # # solve
 t = 0
-for i in 1:20
+for i in 1:200
     global t
     global λ
     global T
 
-    Δt = T * 0.1
+    Δt = T * 0.01
     # Δt = time_step(s)
-    @time solve!(s, Δt, t)
+    solve!(s, Δt, t)
     t += Δt
 
     if i%1 == 0

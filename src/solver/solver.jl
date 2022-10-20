@@ -78,14 +78,6 @@ function dynamic_solver!(s::Structure, dt::Real, t::Real, dynamic_solver::Dynami
     end
 
     # set_disp!(s, dt, t)
-
-    # d = copy(s.solution.d)
-    # for i in eachindex(d)
-    #     if abs(d[i]) < 1e-14
-    #         d[i] = 0.
-    #     end
-    # end
-    # display([s.solution.Q d]);println()
     
     update_states!(s)
     update_nodes!(s)
@@ -111,7 +103,7 @@ end
 """
 Newmark 原始格式。
 """
-function core_solver_newmark!(s::Structure, t, dt::Real, δ::Float64, α::Float64)
+function core_solver_newmark!(s::Structure{dim}, t, dt::Real, δ::Float64, α::Float64) where dim
 
     d_bk = copy(s.solution.d)
     a_bk = copy(s.solution.a)
