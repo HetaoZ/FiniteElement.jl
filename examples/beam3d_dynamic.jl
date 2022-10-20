@@ -2,9 +2,8 @@ include("../src/FiniteElement.jl")
 using .FiniteElement
 
 # define a 2D rectangular grid
-nel = (10,1,1) .* 1
-# grid = RectangularGrid{3, Hexahedron}((0,0,0), (2,1,1), nel)
-grid = RectangularGrid{3, Tetrahedron}((0,0,0), (10,1,1), nel)
+nel = (10,1,1) .* 2
+grid = RectangularGrid{3, Hexahedron}((0,0,0), (10,1,1), nel)
 
 
 # define a material
@@ -22,9 +21,7 @@ solver = NewmarkSolver
 
 # create a structure
 s = Structure(material, grid, solver)
-# dump(s.grid)
-# display(s.grid.elements[1].cv.N); println()
-# display(s.grid.elements[1].cv.dNdξ); println()
+show(s)
 
 # add displacement boundary conditions
 node_ids = find_nodes(s, (-1,-1,-1), (1e-3, 1e2, 1e2))
@@ -47,16 +44,16 @@ save(s, "../../out/beam3d_dynamic/structure_"*string(N))
 
 # solve
 t = 0
-for i in 1:4
+for i in 1:1000
     global t
 
     Δt = time_step(s)
     solve!(s, Δt, t)
     t += Δt
 
-    # if i%1 == 0
-    #     # println("i = ", i, "  t = ", t)
-    #     save(s, "../../out/beam3d_dynamic/structure_"*string(N+i))
-    # end
+    if i%10 == 0
+        println("i = ", i, "  t = ", t)
+        save(s, "../../out/beam3d_dynamic/structure_"*string(N+i))
+    end
     
 end
