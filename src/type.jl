@@ -2,9 +2,9 @@
 ## ----------------------------------------------------------
 # 材料
 # ----------------------------------------------------------
-abstract type AbstractMaterial end
+abstract type AbstractMaterial{dim} end
 
-struct LinearElasticity{dim,T,S} <: AbstractMaterial
+struct LinearElasticity{dim,T,S} <: AbstractMaterial{dim}
     E::T  # Yangs' modulus
     ν::T  # Poisson ratio
     G::T  # Shear modulus
@@ -13,7 +13,7 @@ struct LinearElasticity{dim,T,S} <: AbstractMaterial
     ρ₀::T # Initial density
 end
 
-struct J2Plasticity{dim, T, S} <: AbstractMaterial
+struct J2Plasticity{dim, T, S} <: AbstractMaterial{dim}
     E::T  # Yangs' modulus
     ν::T  # Poisson ratio
     G::T  # Shear modulus
@@ -165,11 +165,11 @@ mutable struct SurfaceTopology <:AbstractTopology
     faces::Matrix{Int} # 每列代表一个 face 的结点编号，face 可以是任意形状
 end
 
-abstract type AbstractGridPrototype end
+abstract type AbstractGridPrototype{dim} end
 
 "表示没有使用原型网格"
-struct NonePrototype <: AbstractGridPrototype end 
-struct RectangularGrid{dim, T<:AbstractElementType} <: AbstractGridPrototype
+struct NonePrototype{dim} <: AbstractGridPrototype{dim} end 
+struct RectangularGrid{dim, T<:AbstractElementType} <: AbstractGridPrototype{dim}
     start
     stop
     nel::NTuple{dim,Int}

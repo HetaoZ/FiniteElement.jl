@@ -153,12 +153,12 @@ end
 # 创建Structure实例
 
 "创建 Structure 实例，可根据 grid_prototype 自动生成网格"
-function Structure(material::AbstractMaterial, grid_prototype::AbstractGridPrototype, solver::AbstractSolver)
+function Structure(material::AbstractMaterial{dim}, grid_prototype::AbstractGridPrototype{dim}, solver::AbstractSolver) where dim
     return Structure(material, generate(grid_prototype), solver)
 end
 
 "创建 Structure 实例"
-function Structure(material::AbstractMaterial, grid::Grid{dim,T}, solver::AbstractSolver) where {dim,T}
+function Structure(material::AbstractMaterial{dim}, grid::Grid{dim,T}, solver::AbstractSolver) where {dim,T}
     
     s = Structure{dim}(material, grid, solver, new_states(material, getnelems(grid), getnq(grid)), new_solution(solver, getndofs(grid)), AbstractConstrain[], Dict(), true)
 

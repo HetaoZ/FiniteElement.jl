@@ -7,13 +7,13 @@ include("interpolation/interpolation.jl")
 
 "不使用原型网格， 已知 surface"
 function Grid{dim,T}(nodes, elements, surface_topo) where dim where T <: AbstractElementType
-    return Grid{dim,T}(nodes, elements, surface_topo, NonePrototype())
+    return Grid{dim,T}(nodes, elements, surface_topo, NonePrototype{dim}())
 end
 
 "不使用原型网格，且暂无定义 surface "
 function Grid{dim,T}(nodes, elements) where dim where T <: AbstractElementType
     surface_topo = SurfaceTopology(eltype(elements))
-    return Grid{dim,T}(nodes, elements, surface_topo, NonePrototype())
+    return Grid{dim,T}(nodes, elements, surface_topo, NonePrototype{dim}())
 end
 
 SurfaceTopology(::Type{Element{dim,N,M,L}}) where {dim,N,M,L} = SurfaceTopology(L)

@@ -48,12 +48,12 @@ end
 getsurface!(s::Structure) = getsurface!(s.grid, s.grid.surface_topology)
 getsurface!(s::Structure, topo::SurfaceTopology) = getsurface!(s.grid, topo)
 
-function getsurface!(grid::Grid{dim,T}, topo::SurfaceTopology) where {dim,T<:Union{Line,Triangle,Quadrilateral,Tetrahedron}}
-    L, M = size(topo.faces)
-    ids = [ntuple(i->grid.nodes[topo.faces[i,i_face]].id, L) for i_face in 1:M]
-    x = [ntuple(i->vec2tuple(grid.nodes[topo.faces[i,i_face]].x), L) for i_face in 1:M]
-    u = [ntuple(i->vec2tuple(grid.nodes[topo.faces[i,i_face]].u), L) for i_face in 1:M]
-    normals = zeros(Float64,dim,size(topo.faces,2))
+function getsurface!(grid::Grid{dim,T}, faces::Matrix{Int}) where {dim,T}
+    L, M = size(faces)
+    ids = [ntuple(i->grid.nodes[faces[i,i_face]].id, L) for i_face in 1:M]
+    x = [ntuple(i->vec2tuple(grid.nodes[faces[i,i_face]].x), L) for i_face in 1:M]
+    u = [ntuple(i->vec2tuple(grid.nodes[faces[i,i_face]].u), L) for i_face in 1:M]
+    normals = zeros(Float64,dim,size(faces,2))
     for j in axes(normals,2)
         normals[:,j] = getnormal(x[j])
     end
@@ -64,29 +64,19 @@ function getsurface!(grid::Grid{dim,T}, topo::SurfaceTopology) where {dim,T<:Uni
     return Surface{M,dim}(ids,x,u,normals,start,stop)
 end
 
+function getsurface!(grid::Grid{dim,T}, topo::SurfaceTopology) where {dim,T<:Union{Line,Triangle,Quadrilateral,Tetrahedron}}
+    return getsurface!(grid, topo.faces)
+end
+
 const ZERO_TRIANGLE = ((0.,0.,0.),(0.,0.,0.),(0.,0.,0.))
 
 function getsurface!(grid::Grid{3,Hexahedron}, topo::SurfaceTopology)
-    ids = fill((0,0,0), 0)
-    x = fill(ZERO_TRIANGLE, 0)
-    u = fill(ZERO_TRIANGLE, 0)
-    normals = zeros(Float64, 3, 0)
-    start = (0.,0.,0.)
-    stop  = (0.,0.,0.)
+    tri_faces = triangularize(topo.faces)
+    return getsurface!(grid, tri_faces)
+end
 
-    for face in topo.faces
-        face_x, face_u, face_normals, face_start, face_stop = convert_for_surface(face, grid)
-        append!(ids, face)
-        append!(x, face_x)
-        append!(u, face_u)
-        normals = hcat(normals, face_normals)
-        start = ntuple(i->min(start[i], face_start[i]), dim)
-        stop  = ntuple(i->max( stop[i],  face_stop[i]), dim)
-    end
-    x = Tuple(x)
-    u = Tuple(u)
-    ids = Tuple(ids)
-    return Surface{M,dim}(ids,x,u,normals,start,stop)
+function triangularize(faces::Matrix{Int})
+    return hcat(faces[[1,2,3],:], faces[[3,4,1],:])
 end
 
 function getquadcenter(nodes::NTuple{4,Node{3}})
